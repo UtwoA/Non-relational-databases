@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chatbotDataset generatedAt="2026-02-17T11:22:00Z" datasetVersion="bad-2">
+  <users>
+    <user id="U301">
+      <username>ira</username>
+      <age>24</age>
+      <registeredAt>2025-01-18</registeredAt>
+      <isPremium>false</isPremium>
+      <preferredLanguages>
+        <language code="en">English</language>
+      </preferredLanguages>
+      <tags/>
+      <settings>
+        <notificationEnabled>true</notificationEnabled>
+        <dailyMessageLimit>40</dailyMessageLimit>
+        <timezone>UTC</timezone>
+      </settings>
+    </user>
+  </users>
+
+  <conversations>
+    <conversation id="C301">
+      <topic>Проверка ссылок</topic>
+      <createdAt>2026-02-17T10:10:00Z</createdAt>
+      <isArchived>false</isArchived>
+      <participants>
+        <participant userId="U999"/>
+      </participants>
+      <messageRefs>
+        <messageRef messageId="M301"/>
+      </messageRefs>
+      <metadata>
+        <sentimentScore>0.0</sentimentScore>
+        <intentTags/>
+      </metadata>
+    </conversation>
+  </conversations>
+
+  <messages>
+    <message id="M301" conversationId="C301" senderId="U301">
+      <content>Тест на нарушение keyref.</content>
+      <sentAt>2026-02-17T10:11:00Z</sentAt>
+      <edited>false</edited>
+      <attachments/>
+      <reactions/>
+      <readBy/>
+      <flags>
+        <containsProfanity>false</containsProfanity>
+        <autoModerated>false</autoModerated>
+      </flags>
+    </message>
+  </messages>
+</chatbotDataset>

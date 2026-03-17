@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chatbotDataset generatedAt="2026-02-17T11:25:00Z" datasetVersion="bad-3">
+  <users>
+    <user id="U401">
+      <username>pavel</username>
+      <age>12</age>
+      <registeredAt>2025-09-10</registeredAt>
+      <isPremium>true</isPremium>
+      <preferredLanguages>
+        <language code="russian">Русский</language>
+      </preferredLanguages>
+      <tags>
+        <tag>qa</tag>
+      </tags>
+      <settings>
+        <notificationEnabled>true</notificationEnabled>
+        <dailyMessageLimit>70</dailyMessageLimit>
+        <timezone>Europe/Moscow</timezone>
+      </settings>
+    </user>
+  </users>
+
+  <conversations>
+    <conversation id="C401">
+      <topic>Проверка ограничений</topic>
+      <createdAt>2026-02-17T11:00:00Z</createdAt>
+      <isArchived>false</isArchived>
+      <participants>
+        <participant userId="U401"/>
+      </participants>
+      <messageRefs>
+        <messageRef messageId="M401"/>
+      </messageRefs>
+      <metadata>
+        <sentimentScore>1.5</sentimentScore>
+        <intentTags>
+          <intent>test</intent>
+        </intentTags>
+      </metadata>
+    </conversation>
+  </conversations>
+
+  <messages>
+    <message id="M401" conversationId="C401" senderId="U401">
+      <content>Проверь неверные типы полей.</content>
+      <sentAt>2026-02-17T11:02:00Z</sentAt>
+      <edited>false</edited>
+      <attachments>
+        <attachment type="video">
+          <url>https://example.com/video.mp4</url>
+          <sizeKB>-42</sizeKB>
+        </attachment>
+      </attachments>
+      <reactions/>
+      <readBy/>
+      <flags>
+        <containsProfanity>false</containsProfanity>
+        <autoModerated>true</autoModerated>
+      </flags>
+      <priority>9</priority>
+    </message>
+  </messages>
+</chatbotDataset>

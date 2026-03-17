@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+  <xs:simpleType name="IdType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Z][A-Za-z0-9_\-]{2,19}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="LangCodeType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[a-z]{2}(-[A-Z]{2})?"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="AttachmentTypeEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="image"/>
+      <xs:enumeration value="file"/>
+      <xs:enumeration value="link"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SentimentType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="-1.0"/>
+      <xs:maxInclusive value="1.0"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="SettingsType">
+    <xs:sequence>
+      <xs:element name="notificationEnabled" type="xs:boolean"/>
+      <xs:element name="dailyMessageLimit" type="xs:positiveInteger"/>
+      <xs:element name="timezone" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="UserType">
+    <xs:sequence>
+      <xs:element name="username" type="xs:string"/>
+      <xs:element name="age">
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:minInclusive value="13"/>
+            <xs:maxInclusive value="120"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="registeredAt" type="xs:date"/>
+      <xs:element name="isPremium" type="xs:boolean"/>
+      <xs:element name="preferredLanguages">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="language" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="code" type="LangCodeType" use="required"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="tags">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="tag" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="settings" type="SettingsType"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="IdType" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="ParticipantRefType">
+    <xs:attribute name="userId" type="IdType" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="MessageRefType">
+    <xs:attribute name="messageId" type="IdType" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="ConversationType">
+    <xs:sequence>
+      <xs:element name="topic" type="xs:string"/>
+      <xs:element name="createdAt" type="xs:dateTime"/>
+      <xs:element name="isArchived" type="xs:boolean"/>
+      <xs:element name="participants">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="participant" type="ParticipantRefType" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="messageRefs">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="messageRef" type="MessageRefType" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="metadata">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="sentimentScore" type="SentimentType"/>
+            <xs:element name="intentTags">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="intent" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="id" type="IdType" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="AttachmentType">
+    <xs:sequence>
+      <xs:element name="url" type="xs:anyURI"/>
+      <xs:element name="sizeKB" type="xs:nonNegativeInteger"/>
+    </xs:sequence>
+    <xs:attribute name="type" type="AttachmentTypeEnum" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="ReactionType">
+    <xs:sequence>
+      <xs:element name="emoji" type="xs:string"/>
+      <xs:element name="createdAt" type="xs:dateTime"/>
+    </xs:sequence>
+    <xs:attribute name="userId" type="IdType" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="ReadReceiptType">
+    <xs:sequence>
+      <xs:element name="readAt" type="xs:dateTime"/>
+    </xs:sequence>
+    <xs:attribute name="userId" type="IdType" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="FlagsType">
+    <xs:sequence>
+      <xs:element name="containsProfanity" type="xs:boolean"/>
+      <xs:element name="autoModerated" type="xs:boolean"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="MessageType">
+    <xs:sequence>
+      <xs:element name="content" type="xs:string"/>
+      <xs:element name="sentAt" type="xs:dateTime"/>
+      <xs:element name="edited" type="xs:boolean"/>
+      <xs:element name="attachments">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="attachment" type="AttachmentType" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="reactions">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="reaction" type="ReactionType" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="readBy">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="reader" type="ReadReceiptType" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="flags" type="FlagsType"/>
+      <xs:element name="priority" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:minInclusive value="1"/>
+            <xs:maxInclusive value="5"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="id" type="IdType" use="required"/>
+    <xs:attribute name="conversationId" type="IdType" use="required"/>
+    <xs:attribute name="senderId" type="IdType" use="required"/>
+  </xs:complexType>
+
+  <xs:element name="chatbotDataset">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="users">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="user" type="UserType" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="conversations">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="conversation" type="ConversationType" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="messages">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="message" type="MessageType" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="generatedAt" type="xs:dateTime" use="required"/>
+      <xs:attribute name="datasetVersion" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:key name="userKey">
+      <xs:selector xpath="users/user"/>
+      <xs:field xpath="@id"/>
+    </xs:key>
+
+    <xs:key name="conversationKey">
+      <xs:selector xpath="conversations/conversation"/>
+      <xs:field xpath="@id"/>
+    </xs:key>
+
+    <xs:key name="messageKey">
+      <xs:selector xpath="messages/message"/>
+      <xs:field xpath="@id"/>
+    </xs:key>
+
+    <xs:keyref name="participantUserRef" refer="userKey">
+      <xs:selector xpath="conversations/conversation/participants/participant"/>
+      <xs:field xpath="@userId"/>
+    </xs:keyref>
+
+    <xs:keyref name="messageRefRef" refer="messageKey">
+      <xs:selector xpath="conversations/conversation/messageRefs/messageRef"/>
+      <xs:field xpath="@messageId"/>
+    </xs:keyref>
+
+    <xs:keyref name="messageSenderRef" refer="userKey">
+      <xs:selector xpath="messages/message"/>
+      <xs:field xpath="@senderId"/>
+    </xs:keyref>
+
+    <xs:keyref name="messageConversationRef" refer="conversationKey">
+      <xs:selector xpath="messages/message"/>
+      <xs:field xpath="@conversationId"/>
+    </xs:keyref>
+
+    <xs:keyref name="reactionUserRef" refer="userKey">
+      <xs:selector xpath="messages/message/reactions/reaction"/>
+      <xs:field xpath="@userId"/>
+    </xs:keyref>
+
+    <xs:keyref name="readByUserRef" refer="userKey">
+      <xs:selector xpath="messages/message/readBy/reader"/>
+      <xs:field xpath="@userId"/>
+    </xs:keyref>
+  </xs:element>
+
+</xs:schema>

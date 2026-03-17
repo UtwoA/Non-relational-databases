@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chatbotDataset generatedAt="2026-02-17T10:00:00Z" datasetVersion="1.0">
+  <users>
+    <user id="U001">
+      <username>anna</username>
+      <age>23</age>
+      <registeredAt>2024-03-10</registeredAt>
+      <isPremium>true</isPremium>
+      <preferredLanguages>
+        <language code="ru">Русский</language>
+        <language code="en">English</language>
+      </preferredLanguages>
+      <tags>
+        <tag>student</tag>
+        <tag>beta-tester</tag>
+      </tags>
+      <settings>
+        <notificationEnabled>true</notificationEnabled>
+        <dailyMessageLimit>150</dailyMessageLimit>
+        <timezone>Europe/Moscow</timezone>
+      </settings>
+    </user>
+    <user id="U002">
+      <username>mike</username>
+      <age>31</age>
+      <registeredAt>2023-11-01</registeredAt>
+      <isPremium>false</isPremium>
+      <preferredLanguages>
+        <language code="en-US">English (US)</language>
+      </preferredLanguages>
+      <tags/>
+      <settings>
+        <notificationEnabled>false</notificationEnabled>
+        <dailyMessageLimit>50</dailyMessageLimit>
+        <timezone>America/New_York</timezone>
+      </settings>
+    </user>
+  </users>
+
+  <conversations>
+    <conversation id="C001">
+      <topic>Планирование поездки</topic>
+      <createdAt>2026-02-10T08:15:00Z</createdAt>
+      <isArchived>false</isArchived>
+      <participants>
+        <participant userId="U001"/>
+        <participant userId="U002"/>
+      </participants>
+      <messageRefs>
+        <messageRef messageId="M001"/>
+        <messageRef messageId="M002"/>
+      </messageRefs>
+      <metadata>
+        <sentimentScore>0.60</sentimentScore>
+        <intentTags>
+          <intent>travel_planning</intent>
+          <intent>budget</intent>
+        </intentTags>
+      </metadata>
+    </conversation>
+  </conversations>
+
+  <messages>
+    <message id="M001" conversationId="C001" senderId="U001">
+      <content>Нужен недорогой маршрут в Казань на выходные.</content>
+      <sentAt>2026-02-10T08:16:01Z</sentAt>
+      <edited>false</edited>
+      <attachments/>
+      <reactions>
+        <reaction userId="U002">
+          <emoji>👍</emoji>
+          <createdAt>2026-02-10T08:16:20Z</createdAt>
+        </reaction>
+      </reactions>
+      <readBy>
+        <reader userId="U002">
+          <readAt>2026-02-10T08:17:00Z</readAt>
+        </reader>
+      </readBy>
+      <flags>
+        <containsProfanity>false</containsProfanity>
+        <autoModerated>true</autoModerated>
+      </flags>
+      <priority>3</priority>
+    </message>
+
+    <message id="M002" conversationId="C001" senderId="U002">
+      <content>Соберу варианты поездов и автобусов.</content>
+      <sentAt>2026-02-10T08:17:10Z</sentAt>
+      <edited>true</edited>
+      <attachments>
+        <attachment type="link">
+          <url>https://example.com/routes</url>
+          <sizeKB>0</sizeKB>
+        </attachment>
+      </attachments>
+      <reactions/>
+      <readBy/>
+      <flags>
+        <containsProfanity>false</containsProfanity>
+        <autoModerated>false</autoModerated>
+      </flags>
+    </message>
+  </messages>
+</chatbotDataset>

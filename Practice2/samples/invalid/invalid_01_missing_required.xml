@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chatbotDataset generatedAt="2026-02-17T11:20:00Z" datasetVersion="bad-1">
+  <users>
+    <user id="U201">
+      <username>oleg</username>
+      <age>27</age>
+      <registeredAt>17-02-2026</registeredAt>
+      <isPremium>true</isPremium>
+      <preferredLanguages>
+        <language code="ru">Русский</language>
+      </preferredLanguages>
+      <tags/>
+      <settings>
+        <notificationEnabled>true</notificationEnabled>
+        <dailyMessageLimit>100</dailyMessageLimit>
+        <timezone>Europe/Moscow</timezone>
+      </settings>
+    </user>
+  </users>
+
+  <conversations>
+    <conversation id="C201">
+      <topic>Ошибка формата даты</topic>
+      <createdAt>2026-02-17T11:00:00Z</createdAt>
+      <isArchived>false</isArchived>
+      <participants>
+        <participant userId="U201"/>
+      </participants>
+      <messageRefs/>
+      <metadata>
+        <sentimentScore>0.1</sentimentScore>
+        <intentTags/>
+      </metadata>
+    </conversation>
+  </conversations>
+
+  <messages>
+    <message id="M201" conversationId="C201" senderId="U201">
+      <sentAt>2026-02-17T11:00:10Z</sentAt>
+      <edited>false</edited>
+      <attachments/>
+      <reactions/>
+      <readBy/>
+      <flags>
+        <containsProfanity>false</containsProfanity>
+        <autoModerated>false</autoModerated>
+      </flags>
+    </message>
+  </messages>
+</chatbotDataset>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chatbotDataset generatedAt="2026-02-17T10:20:00Z" datasetVersion="1.1">
+  <users>
+    <user id="U010">
+      <username>sveta</username>
+      <age>19</age>
+      <registeredAt>2025-05-14</registeredAt>
+      <isPremium>false</isPremium>
+      <preferredLanguages>
+        <language code="ru">Русский</language>
+      </preferredLanguages>
+      <tags>
+        <tag>new-user</tag>
+      </tags>
+      <settings>
+        <notificationEnabled>true</notificationEnabled>
+        <dailyMessageLimit>30</dailyMessageLimit>
+        <timezone>Europe/Samara</timezone>
+      </settings>
+    </user>
+  </users>
+
+  <conversations>
+    <conversation id="C010">
+      <topic>Справка по подписке</topic>
+      <createdAt>2026-02-15T17:00:00Z</createdAt>
+      <isArchived>true</isArchived>
+      <participants>
+        <participant userId="U010"/>
+      </participants>
+      <messageRefs>
+        <messageRef messageId="M010"/>
+      </messageRefs>
+      <metadata>
+        <sentimentScore>-0.10</sentimentScore>
+        <intentTags/>
+      </metadata>
+    </conversation>
+  </conversations>
+
+  <messages>
+    <message id="M010" conversationId="C010" senderId="U010">
+      <content>Как отменить автопродление?</content>
+      <sentAt>2026-02-15T17:00:45Z</sentAt>
+      <edited>false</edited>
+      <attachments>
+        <attachment type="image">
+          <url>https://example.com/help/screen.png</url>
+          <sizeKB>742</sizeKB>
+        </attachment>
+        <attachment type="file">
+          <url>https://example.com/help/terms.pdf</url>
+          <sizeKB>1250</sizeKB>
+        </attachment>
+      </attachments>
+      <reactions/>
+      <readBy>
+        <reader userId="U010">
+          <readAt>2026-02-15T17:01:00Z</readAt>
+        </reader>
+      </readBy>
+      <flags>
+        <containsProfanity>false</containsProfanity>
+        <autoModerated>false</autoModerated>
+      </flags>
+      <priority>5</priority>
+    </message>
+  </messages>
+</chatbotDataset>

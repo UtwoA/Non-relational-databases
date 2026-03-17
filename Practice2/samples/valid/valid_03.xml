@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chatbotDataset generatedAt="2026-02-17T11:05:00Z" datasetVersion="1.2">
+  <users>
+    <user id="U100">
+      <username>bot_owner</username>
+      <age>40</age>
+      <registeredAt>2022-01-03</registeredAt>
+      <isPremium>true</isPremium>
+      <preferredLanguages>
+        <language code="en">English</language>
+        <language code="de">Deutsch</language>
+        <language code="fr">Francais</language>
+      </preferredLanguages>
+      <tags/>
+      <settings>
+        <notificationEnabled>true</notificationEnabled>
+        <dailyMessageLimit>500</dailyMessageLimit>
+        <timezone>UTC</timezone>
+      </settings>
+    </user>
+    <user id="U101">
+      <username>nina</username>
+      <age>28</age>
+      <registeredAt>2025-10-08</registeredAt>
+      <isPremium>false</isPremium>
+      <preferredLanguages/>
+      <tags>
+        <tag>marketing</tag>
+      </tags>
+      <settings>
+        <notificationEnabled>false</notificationEnabled>
+        <dailyMessageLimit>80</dailyMessageLimit>
+        <timezone>Europe/Berlin</timezone>
+      </settings>
+    </user>
+  </users>
+
+  <conversations>
+    <conversation id="C100">
+      <topic>Идеи для контента</topic>
+      <createdAt>2026-02-16T09:00:00Z</createdAt>
+      <isArchived>false</isArchived>
+      <participants>
+        <participant userId="U100"/>
+        <participant userId="U101"/>
+      </participants>
+      <messageRefs>
+        <messageRef messageId="M100"/>
+      </messageRefs>
+      <metadata>
+        <sentimentScore>0.95</sentimentScore>
+        <intentTags>
+          <intent>brainstorm</intent>
+        </intentTags>
+      </metadata>
+    </conversation>
+  </conversations>
+
+  <messages>
+    <message id="M100" conversationId="C100" senderId="U101">
+      <content>Сделаем серию коротких видео с FAQ по продукту.</content>
+      <sentAt>2026-02-16T09:01:10Z</sentAt>
+      <edited>false</edited>
+      <attachments/>
+      <reactions>
+        <reaction userId="U100">
+          <emoji>🔥</emoji>
+          <createdAt>2026-02-16T09:01:30Z</createdAt>
+        </reaction>
+      </reactions>
+      <readBy>
+        <reader userId="U100">
+          <readAt>2026-02-16T09:01:35Z</readAt>
+        </reader>
+        <reader userId="U101">
+          <readAt>2026-02-16T09:01:40Z</readAt>
+        </reader>
+      </readBy>
+      <flags>
+        <containsProfanity>false</containsProfanity>
+        <autoModerated>true</autoModerated>
+      </flags>
+      <priority>4</priority>
+    </message>
+  </messages>
+</chatbotDataset>
