@@ -9,6 +9,12 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="NonEmptyString">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="LangCodeType">
     <xs:restriction base="xs:string">
       <xs:pattern value="[a-z]{2}(-[A-Z]{2})?"/>
@@ -40,7 +46,7 @@
 
   <xs:complexType name="UserType">
     <xs:sequence>
-      <xs:element name="username" type="xs:string"/>
+      <xs:element name="username" type="NonEmptyString"/>
       <xs:element name="age">
         <xs:simpleType>
           <xs:restriction base="xs:integer">
@@ -69,7 +75,7 @@
       <xs:element name="tags">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="tag" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="tag" type="NonEmptyString" minOccurs="0" maxOccurs="unbounded"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>

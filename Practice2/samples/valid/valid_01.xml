@@ -2,7 +2,7 @@
 <chatbotDataset generatedAt="2026-02-17T10:00:00Z" datasetVersion="1.0">
   <users>
     <user id="U001">
-      <username>anna</username>
+      <username></username>
       <age>23</age>
       <registeredAt>2024-03-10</registeredAt>
       <isPremium>true</isPremium>
@@ -11,8 +11,8 @@
         <language code="en">English</language>
       </preferredLanguages>
       <tags>
-        <tag>student</tag>
-        <tag>beta-tester</tag>
+        <tag></tag>
+        <tag></tag>
       </tags>
       <settings>
         <notificationEnabled>true</notificationEnabled>
