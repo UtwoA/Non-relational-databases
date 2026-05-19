@@ -18,6 +18,7 @@
       --amber: #b7791f;
       --violet: #7c3aed;
       --teal: #0f766e;
+      --pink: #db2777;
     }
     * { box-sizing: border-box; }
     body {
@@ -51,7 +52,7 @@
     }
     .controls {
       display: grid;
-      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
       gap: 12px;
       margin-bottom: 14px;
     }
@@ -61,7 +62,7 @@
       color: var(--muted);
       font-size: 13px;
     }
-    input {
+    input, select {
       width: 100%;
       height: 38px;
       border: 1px solid var(--line);
@@ -153,6 +154,145 @@
     .bar.pubsub { background: var(--violet); }
     .bar.stream { background: var(--amber); }
     .bar.zset { background: var(--teal); }
+    .bar.kafka { background: var(--pink); }
+    .chart-surface {
+      width: 100%;
+      height: 380px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 12px;
+      cursor: grab;
+      touch-action: none;
+    }
+    .chart-surface.dragging { cursor: grabbing; }
+    .chart-surface canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .chart-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .chart-head h2 { margin-bottom: 0; }
+    .chart-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .chart-tools button {
+      background: #475569;
+      padding: 8px 10px;
+      min-width: 38px;
+    }
+    .chart-tools select {
+      height: 34px;
+      min-width: 150px;
+    }
+    .chart-hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0 0 10px;
+    }
+    .chart-explainer {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 12px;
+      margin: 12px 0;
+    }
+    .legend-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+    .legend-box h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 12px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      font-size: 13px;
+      min-width: 0;
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex: 0 0 auto;
+    }
+    .legend-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .mini-charts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .mini-chart {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+    }
+    .mini-chart h3 {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .mini-chart p {
+      margin: 0 0 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .mini-chart canvas {
+      display: block;
+      width: 100%;
+      height: 132px !important;
+    }
+    .metric-charts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .metric-chart-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+    .metric-chart-card h3 {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .metric-chart-card p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .metric-chart-card canvas {
+      display: block;
+      width: 100%;
+      height: 190px !important;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -166,10 +306,13 @@
     th { color: var(--muted); font-weight: 600; }
     @media (max-width: 1100px) {
       .cards { grid-template-columns: repeat(2, 1fr); }
+      .mini-charts { grid-template-columns: repeat(2, 1fr); }
+      .metric-charts { grid-template-columns: 1fr; }
+      .chart-explainer { grid-template-columns: 1fr; }
     }
     @media (max-width: 760px) {
       header { display: block; }
-      .controls, .cards { grid-template-columns: 1fr; }
+      .controls, .cards, .mini-charts { grid-template-columns: 1fr; }
       .bar-row { grid-template-columns: 80px 1fr 50px; }
     }
   </style>
@@ -179,7 +322,7 @@
     <header>
       <div>
         <h1>Redis как брокер сообщений</h1>
-        <p>Пять интерпретаций одной задачи: без очереди, Pub/Sub, Lists, Streams и Sorted Set.</p>
+      <p>Сравнение прямой обработки, Redis-паттернов и Kafka при пиковой нагрузке.</p>
       </div>
       <div class="status" id="status">Готово</div>
     </header>
@@ -199,14 +342,26 @@
         <label>Обработка, мс
           <input id="processing" type="number" min="1" max="5000" value="250">
         </label>
+        <label>Delayed-режим
+          <select id="delayedMode">
+            <option value="stream">Redis Streams</option>
+            <option value="list">Redis Lists</option>
+            <option value="zset">Redis ZSET</option>
+            <option value="kafka">Kafka</option>
+          </select>
+        </label>
       </div>
       <div class="buttons">
+        <button data-mode="all">Запустить сравнение всех</button>
+        <button data-mode="delayed">Consumer стартует позже</button>
         <button data-mode="direct">Без очереди</button>
         <button data-mode="pubsub">Redis Pub/Sub</button>
         <button data-mode="list">Redis Lists</button>
         <button data-mode="stream">Redis Streams</button>
         <button data-mode="zset">Redis ZSET</button>
-        <button class="danger" id="reset">Сбросить Redis</button>
+        <button data-mode="kafka">Kafka</button>
+        <button id="doctor">Проверить сервисы</button>
+        <button class="danger" id="reset">Сбросить метрики</button>
       </div>
     </section>
 
@@ -216,8 +371,75 @@
     </section>
 
     <section class="panel">
-      <h2>Накопление и спад</h2>
+      <div class="chart-head">
+        <h2>Сравнительный график</h2>
+        <div class="chart-tools">
+          <select id="chartMetric">
+            <option value="pressure">Нагрузка: backlog + потери</option>
+            <option value="backlog">Только накопление</option>
+            <option value="processed">Обработано</option>
+            <option value="latency">Средняя задержка</option>
+          </select>
+          <select id="chartMode">
+            <option value="all">Все режимы</option>
+            <option value="direct">Без очереди</option>
+            <option value="pubsub">Pub/Sub</option>
+            <option value="list">Lists</option>
+            <option value="stream">Streams</option>
+            <option value="zset">ZSET</option>
+            <option value="kafka">Kafka</option>
+          </select>
+          <button id="chartLeft" type="button">←</button>
+          <button id="chartRight" type="button">→</button>
+          <button id="chartZoomIn" type="button">+</button>
+          <button id="chartZoomOut" type="button">−</button>
+          <button id="chartReset" type="button">Сброс</button>
+        </div>
+      </div>
+      <p class="chart-hint" id="chartHint">Колесо мыши меняет масштаб, перетаскивание перемещает график по истории.</p>
+      <div class="chart-explainer">
+        <div class="legend-box">
+          <h3>Цвета режимов</h3>
+          <div class="legend-grid" id="modeLegend"></div>
+        </div>
+        <div class="legend-box">
+          <h3>Как читать метрики</h3>
+          <div class="legend-note">
+            <p><strong>Нагрузка</strong> = накопление в брокере + pending + потери. Для direct и Pub/Sub показывает отказы/потери.</p>
+            <p><strong>Накопление</strong> = backlog + pending. Для очередей и Kafka показывает, сколько работы еще ждет consumer.</p>
+            <p><strong>Обработано</strong> = сколько заданий consumer уже завершил. <strong>Задержка</strong> = среднее время от создания задания до обработки.</p>
+          </div>
+        </div>
+      </div>
+      <div id="mainChart" class="chart-surface"></div>
+      <div id="miniCharts" class="mini-charts"></div>
+      <div id="metricCharts" class="metric-charts"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Последние значения накопления</h2>
       <div class="chart" id="chart"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Интерпретация режимов</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Режим</th>
+            <th>Что проверяем</th>
+            <th>Ожидаемое поведение</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Без очереди</td><td>Нет брокера между producer и consumer</td><td>При пике появляются отказы</td></tr>
+          <tr><td>Pub/Sub</td><td>Канал без хранения</td><td>Сообщения без подписчика теряются</td></tr>
+          <tr><td>Lists</td><td>Простая FIFO-очередь</td><td>Очередь растет и затем уменьшается</td></tr>
+          <tr><td>Streams</td><td>Consumer group, pending, ack</td><td>Появляется lag/pending, затем `XACK` разгребает поток</td></tr>
+          <tr><td>ZSET</td><td>Отложенная очередь</td><td>Задания становятся доступными по времени score</td></tr>
+          <tr><td>Kafka</td><td>Отдельный брокер сообщений</td><td>Consumer group читает topic, lag растет и спадает</td></tr>
+        </tbody>
+      </table>
     </section>
 
     <section class="panel">
@@ -239,42 +461,110 @@
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script>
     const modeNames = {
       direct: "Без очереди",
       pubsub: "Pub/Sub",
       list: "Lists",
       stream: "Streams",
-      zset: "ZSET"
+      zset: "ZSET",
+      kafka: "Kafka",
+      all: "Все режимы",
+      delayed: "Delayed consumer"
+    };
+    const modeOrder = ["direct", "pubsub", "list", "stream", "zset", "kafka"];
+    const modeColors = {
+      direct: "#c2410c",
+      pubsub: "#7c3aed",
+      list: "#12805c",
+      stream: "#b7791f",
+      zset: "#0f766e",
+      kafka: "#db2777"
     };
     const modeDescriptions = {
       direct: "Пик бьет прямо в обработчик, лишние запросы отклоняются.",
       pubsub: "Нет хранения: без подписчика сообщения теряются, backlog не растет.",
       list: "Классическая очередь: LLEN растет на пике и снижается consumer-ами.",
       stream: "Журнал с consumer group: видны XLEN, XPENDING и подтверждения.",
-      zset: "Отложенная очередь: score задает время готовности задания."
+      zset: "Отложенная очередь: score задает время готовности задания.",
+      kafka: "Классический брокер: topic, consumer group и lag.",
+      all: "Последовательно запускает все режимы и строит общий график.",
+      delayed: "Сначала копит задания без consumer, затем запускает обработчиков."
     };
     const statusEl = document.querySelector("#status");
     const buttons = Array.from(document.querySelectorAll("button[data-mode]"));
+    let latestMeasurements = [];
+    let mainChartInstance = null;
+    const miniChartInstances = {};
+    const metricChartInstances = {};
+    const chartState = {
+      offset: 0,
+      windowSize: 80,
+      minWindow: 8,
+      maxWindow: 240,
+      dragging: false,
+      dragStartX: 0,
+      dragStartOffset: 0
+    };
+    const metricLabels = {
+      pressure: "backlog + pending + потери",
+      backlog: "backlog + pending",
+      processed: "обработано",
+      latency: "средняя задержка, мс"
+    };
+    const dashboardMetrics = [
+      {
+        id: "backlog",
+        title: "Накопление в брокере",
+        note: "Пик должен поднять очередь или lag, после работы consumer линия должна снижаться.",
+        value: item => item.backlog + item.pending
+      },
+      {
+        id: "rejected",
+        title: "Отказы и потери",
+        note: "Direct показывает отказы при перегрузе, Pub/Sub показывает потерю сообщений без хранения.",
+        value: item => item.rejected
+      },
+      {
+        id: "processed",
+        title: "Обработанные задания",
+        note: "Consumer не падает, а постепенно догоняет producer и увеличивает число обработанных задач.",
+        value: item => item.processed
+      },
+      {
+        id: "latency",
+        title: "Средняя задержка, мс",
+        note: "При накоплении очередь сглаживает пик, но цена этого - рост времени ожидания.",
+        value: item => item.avg_latency_ms
+      }
+    ];
 
     function values() {
       return {
         jobs: Number(document.querySelector("#jobs").value),
         burst: Number(document.querySelector("#burst").value),
         workers: Number(document.querySelector("#workers").value),
-        processing_ms: Number(document.querySelector("#processing").value)
+        processing_ms: Number(document.querySelector("#processing").value),
+        delayed_mode: document.querySelector("#delayedMode").value,
+        consumer_delay_seconds: 2
       };
     }
 
     async function loadMetrics() {
-      const response = await fetch("/api/metrics");
+      const response = await fetch("/api/metrics?limit=1200");
       const data = await response.json();
+      latestMeasurements = data.measurements;
       renderCards(data.metrics);
+      renderMainChart(latestMeasurements);
+      renderMiniCharts(latestMeasurements);
+      renderMetricDashboard(latestMeasurements);
       renderChart(data.measurements);
       renderMeasurements(data.measurements.slice(-14).reverse());
     }
 
     function renderCards(metrics) {
+      renderModeLegend();
       document.querySelector("#cards").innerHTML = metrics.map(item => `
         <article class="card">
           <h3>${modeNames[item.mode]}</h3>
@@ -291,11 +581,32 @@
       `).join("");
     }
 
+    function renderModeLegend() {
+      document.querySelector("#modeLegend").innerHTML = modeOrder.map(mode => `
+        <div class="legend-item">
+          <span class="legend-dot" style="background:${modeColors[mode]}"></span>
+          <span><strong>${modeNames[mode]}</strong> — ${shortModeMeaning(mode)}</span>
+        </div>
+      `).join("");
+    }
+
+    function shortModeMeaning(mode) {
+      return {
+        direct: "без брокера",
+        pubsub: "канал без хранения",
+        list: "FIFO-очередь Redis",
+        stream: "consumer group Redis",
+        zset: "отложенная очередь",
+        kafka: "topic и lag"
+      }[mode];
+    }
+
     function renderChart(measurements) {
-      const recent = measurements.slice(-40);
-      const maxBacklog = Math.max(1, ...recent.map(item => visibleValue(item)));
-      document.querySelector("#chart").innerHTML = recent.map(item => {
-        const value = visibleValue(item);
+      const latest = latestByMode(measurements);
+      const rows = modeOrder.map(mode => latest[mode]).filter(Boolean);
+      const maxBacklog = Math.max(1, ...rows.map(item => metricValue(item, "pressure")));
+      document.querySelector("#chart").innerHTML = rows.map(item => {
+        const value = metricValue(item, "pressure");
         const width = Math.max(2, Math.round(value / maxBacklog * 100));
         return `
           <div class="bar-row">
@@ -308,10 +619,307 @@
     }
 
     function visibleValue(item) {
-      if (item.mode === "direct" || item.mode === "pubsub") {
-        return item.rejected;
-      }
+      return metricValue(item, "pressure");
+    }
+
+    function metricValue(item, metric) {
+      if (metric === "backlog") return item.backlog + item.pending;
+      if (metric === "processed") return item.processed;
+      if (metric === "latency") return item.avg_latency_ms;
+      if (item.mode === "direct" || item.mode === "pubsub") return item.rejected;
       return item.backlog + item.pending;
+    }
+
+    function renderMainChart(measurements) {
+      const host = document.querySelector("#mainChart");
+      const metric = document.querySelector("#chartMetric").value;
+      const selectedMode = document.querySelector("#chartMode").value;
+      const grouped = groupedSeries(measurements, metric);
+      const modes = selectedMode === "all" ? modeOrder : [selectedMode];
+      const view = chartWindow(grouped, modes);
+      if (!window.Chart) {
+        host.innerHTML = "<p>Chart.js не загружен. Проверь подключение к интернету или CDN.</p>";
+        return;
+      }
+
+      host.innerHTML = '<canvas id="mainChartCanvas"></canvas>';
+      if (mainChartInstance) {
+        mainChartInstance.destroy();
+      }
+
+      const maxPoints = Math.max(1, ...modes.map(mode => (view.series[mode] || []).length));
+      const labels = Array.from({length: maxPoints}, (_value, index) => `шаг ${index + 1}`);
+      const datasets = modes.map(mode => ({
+        label: modeNames[mode],
+        data: (view.series[mode] || []).map(point => point.value),
+        borderColor: modeColors[mode],
+        backgroundColor: `${modeColors[mode]}22`,
+        pointBackgroundColor: modeColors[mode],
+        pointBorderColor: "#ffffff",
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        borderWidth: 3,
+        tension: 0.28,
+        fill: false
+      }));
+
+      mainChartInstance = new Chart(document.querySelector("#mainChartCanvas"), {
+        type: "line",
+        data: {labels, datasets},
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {mode: "nearest", intersect: false},
+          plugins: {
+            legend: {
+              position: "top",
+              labels: {usePointStyle: true, boxWidth: 8, boxHeight: 8}
+            },
+            tooltip: {
+              callbacks: {
+                title: items => items.length ? items[0].label : "",
+                label: item => `${item.dataset.label}: ${item.formattedValue} (${metricLabels[metric]})`
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: {display: true, text: "шаги измерений внутри выбранного окна"},
+              grid: {display: false}
+            },
+            y: {
+              beginAtZero: true,
+              title: {display: true, text: metricLabels[metric]},
+              grid: {color: "#e5e7eb"}
+            }
+          }
+        }
+      });
+
+      const hint = document.querySelector("#chartHint");
+      if (hint) {
+        const largest = Math.max(...modes.map(mode => (grouped[mode] || []).length), 0);
+        hint.textContent = largest
+          ? `Окно: последние ${view.size} точек по выбранным режимам, смещение от конца: ${chartState.offset}. Метрика: ${metricLabels[metric]}.`
+          : "Пока нет измерений. Запусти сценарий, чтобы появился график.";
+      }
+    }
+
+    function renderMiniCharts(measurements) {
+      const metric = document.querySelector("#chartMetric").value;
+      const grouped = groupedSeries(measurements, metric);
+      const host = document.querySelector("#miniCharts");
+
+      Object.values(miniChartInstances).forEach(chart => chart.destroy());
+      for (const key of Object.keys(miniChartInstances)) {
+        delete miniChartInstances[key];
+      }
+
+      if (!window.Chart) {
+        host.innerHTML = "";
+        return;
+      }
+
+      host.innerHTML = modeOrder.map(mode => {
+        const points = (grouped[mode] || []).slice(-32);
+        const latest = points.at(-1);
+        return `<article class="mini-chart">
+          <h3>${modeNames[mode]}</h3>
+          <p>${metricLabels[metric]}: ${latest ? latest.value : 0}</p>
+          <canvas id="miniChart-${mode}"></canvas>
+        </article>`;
+      }).join("");
+
+      for (const mode of modeOrder) {
+        const points = (grouped[mode] || []).slice(-32);
+        const canvas = document.querySelector(`#miniChart-${mode}`);
+        if (!canvas) continue;
+
+        miniChartInstances[mode] = new Chart(canvas, {
+          type: "line",
+          data: {
+            labels: points.map((_point, index) => index + 1),
+            datasets: [{
+              label: modeNames[mode],
+              data: points.map(point => point.value),
+              borderColor: modeColors[mode],
+              backgroundColor: `${modeColors[mode]}1f`,
+              borderWidth: 2,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              tension: 0.25,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {mode: "index", intersect: false},
+            plugins: {
+              legend: {display: false},
+              tooltip: {
+                callbacks: {
+                  label: item => `${modeNames[mode]}: ${item.formattedValue}`
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: {display: false},
+                grid: {display: false}
+              },
+              y: {
+                beginAtZero: true,
+                ticks: {precision: 0, maxTicksLimit: 4},
+                grid: {color: "#eef2f7"}
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function renderMetricDashboard(measurements) {
+      const host = document.querySelector("#metricCharts");
+
+      Object.values(metricChartInstances).forEach(chart => chart.destroy());
+      for (const key of Object.keys(metricChartInstances)) {
+        delete metricChartInstances[key];
+      }
+
+      if (!window.Chart) {
+        host.innerHTML = "";
+        return;
+      }
+
+      host.innerHTML = dashboardMetrics.map(metric => `
+        <article class="metric-chart-card">
+          <h3>${metric.title}</h3>
+          <p>${metric.note}</p>
+          <canvas id="metricChart-${metric.id}"></canvas>
+        </article>
+      `).join("");
+
+      for (const metric of dashboardMetrics) {
+        const grouped = modeOrder.reduce((acc, mode) => {
+          acc[mode] = measurements
+            .filter(item => item.mode === mode)
+            .slice(-48)
+            .map(item => metric.value(item));
+          return acc;
+        }, {});
+        const maxPoints = Math.max(1, ...modeOrder.map(mode => grouped[mode].length));
+        const labels = Array.from({length: maxPoints}, (_value, index) => index + 1);
+        const canvas = document.querySelector(`#metricChart-${metric.id}`);
+        if (!canvas) continue;
+
+        metricChartInstances[metric.id] = new Chart(canvas, {
+          type: "line",
+          data: {
+            labels,
+            datasets: modeOrder.map(mode => ({
+              label: modeNames[mode],
+              data: grouped[mode],
+              borderColor: modeColors[mode],
+              backgroundColor: `${modeColors[mode]}18`,
+              borderWidth: 2,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              tension: 0.25,
+              fill: false
+            }))
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {mode: "index", intersect: false},
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: {usePointStyle: true, boxWidth: 7, boxHeight: 7}
+              },
+              tooltip: {callbacks: {title: items => items.length ? `Шаг ${items[0].label}` : ""}}
+            },
+            scales: {
+              x: {
+                title: {display: true, text: "последние измерения"},
+                grid: {display: false}
+              },
+              y: {
+                beginAtZero: true,
+                ticks: {precision: 0},
+                grid: {color: "#eef2f7"}
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function groupedSeries(measurements, metric) {
+      return modeOrder.reduce((acc, mode) => {
+        acc[mode] = measurements
+          .filter(item => item.mode === mode)
+          .map(item => ({item, value: metricValue(item, metric)}));
+        return acc;
+      }, {});
+    }
+
+    function latestByMode(measurements) {
+      return measurements.reduce((acc, item) => {
+        acc[item.mode] = item;
+        return acc;
+      }, {});
+    }
+
+    function chartWindow(grouped, modes) {
+      const total = Math.max(...modes.map(mode => (grouped[mode] || []).length), 0);
+      const size = clamp(chartState.windowSize, chartState.minWindow, Math.max(chartState.minWindow, Math.min(chartState.maxWindow, total || chartState.windowSize)));
+      chartState.windowSize = size;
+      const maxOffset = Math.max(0, total - size);
+      chartState.offset = clamp(chartState.offset, 0, maxOffset);
+      const series = {};
+      for (const mode of modes) {
+        const rows = grouped[mode] || [];
+        const end = Math.max(0, rows.length - chartState.offset);
+        const start = Math.max(0, end - size);
+        series[mode] = rows.slice(start, end);
+      }
+      return {series, size};
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function moveChart(delta) {
+      const maxOffset = currentChartMaxOffset();
+      chartState.offset = clamp(chartState.offset + delta, 0, maxOffset);
+      renderMainChart(latestMeasurements);
+    }
+
+    function zoomChart(factor) {
+      const oldSize = chartState.windowSize;
+      const nextSize = clamp(
+        Math.round(oldSize * factor),
+        chartState.minWindow,
+        Math.max(chartState.minWindow, Math.min(chartState.maxWindow, currentChartMaxPoints() || chartState.maxWindow))
+      );
+      chartState.offset = Math.max(0, chartState.offset + Math.round((oldSize - nextSize) / 2));
+      chartState.windowSize = nextSize;
+      renderMainChart(latestMeasurements);
+    }
+
+    function currentChartMaxPoints() {
+      const metric = document.querySelector("#chartMetric").value;
+      const selectedMode = document.querySelector("#chartMode").value;
+      const modes = selectedMode === "all" ? modeOrder : [selectedMode];
+      const grouped = groupedSeries(latestMeasurements, metric);
+      return Math.max(...modes.map(mode => (grouped[mode] || []).length), 0);
+    }
+
+    function currentChartMaxOffset() {
+      return Math.max(0, currentChartMaxPoints() - chartState.windowSize);
     }
 
     function renderMeasurements(rows) {
@@ -356,6 +964,63 @@
       await loadMetrics();
       statusEl.textContent = "Готово";
     });
+
+    document.querySelector("#doctor").addEventListener("click", async () => {
+      statusEl.textContent = "Проверка сервисов";
+      const response = await fetch("/api/health");
+      const data = await response.json();
+      statusEl.textContent = data.ok
+        ? "Redis и Kafka доступны"
+        : data.services.map(item => `${item.service}: ${item.ok ? "ok" : "fail"}`).join(", ");
+    });
+
+    document.querySelector("#chartLeft").addEventListener("click", () => moveChart(10));
+    document.querySelector("#chartRight").addEventListener("click", () => moveChart(-10));
+    document.querySelector("#chartZoomIn").addEventListener("click", () => zoomChart(0.75));
+    document.querySelector("#chartZoomOut").addEventListener("click", () => zoomChart(1.35));
+    document.querySelector("#chartReset").addEventListener("click", () => {
+      chartState.offset = 0;
+      chartState.windowSize = 80;
+      renderMainChart(latestMeasurements);
+    });
+    document.querySelector("#chartMetric").addEventListener("change", () => {
+      renderMainChart(latestMeasurements);
+      renderMiniCharts(latestMeasurements);
+      renderChart(latestMeasurements);
+    });
+    document.querySelector("#chartMode").addEventListener("change", () => renderMainChart(latestMeasurements));
+
+    const mainChart = document.querySelector("#mainChart");
+    mainChart.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      zoomChart(event.deltaY < 0 ? 0.85 : 1.18);
+    }, {passive: false});
+    mainChart.addEventListener("pointerdown", (event) => {
+      chartState.dragging = true;
+      chartState.dragStartX = event.clientX;
+      chartState.dragStartOffset = chartState.offset;
+      mainChart.classList.add("dragging");
+      mainChart.setPointerCapture(event.pointerId);
+    });
+    mainChart.addEventListener("pointermove", (event) => {
+      if (!chartState.dragging) return;
+      const width = mainChart.clientWidth || 1200;
+      const dx = event.clientX - chartState.dragStartX;
+      const step = Math.round(dx / Math.max(1, width) * chartState.windowSize);
+      const maxOffset = currentChartMaxOffset();
+      chartState.offset = clamp(chartState.dragStartOffset + step, 0, maxOffset);
+      renderMainChart(latestMeasurements);
+    });
+    function stopChartDrag(event) {
+      if (!chartState.dragging) return;
+      chartState.dragging = false;
+      mainChart.classList.remove("dragging");
+      if (event && mainChart.hasPointerCapture(event.pointerId)) {
+        mainChart.releasePointerCapture(event.pointerId);
+      }
+    }
+    mainChart.addEventListener("pointerup", stopChartDrag);
+    mainChart.addEventListener("pointercancel", stopChartDrag);
 
     loadMetrics();
     setInterval(loadMetrics, 3000);

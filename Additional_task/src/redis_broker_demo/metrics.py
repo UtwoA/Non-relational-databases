@@ -7,7 +7,9 @@ from typing import Any
 
 PREFIX = "additional"
 MEASUREMENTS_KEY = f"{PREFIX}:measurements"
-MODES = ("direct", "pubsub", "list", "stream", "zset")
+MODES = ("direct", "pubsub", "list", "stream", "zset", "kafka")
+MEASUREMENTS_MAX_ITEMS = 5000
+MEASUREMENTS_DEFAULT_LIMIT = 1200
 
 
 class MetricsStore:
@@ -66,10 +68,10 @@ class MetricsStore:
     def snapshot(self, mode: str, backlog: int = 0, pending: int = 0) -> dict[str, Any]:
         payload = self.read_mode(mode, backlog=backlog, pending=pending)
         self.redis.lpush(MEASUREMENTS_KEY, json.dumps(payload, ensure_ascii=False))
-        self.redis.ltrim(MEASUREMENTS_KEY, 0, 199)
+        self.redis.ltrim(MEASUREMENTS_KEY, 0, MEASUREMENTS_MAX_ITEMS - 1)
         return payload
 
-    def measurements(self, limit: int = 80) -> list[dict[str, Any]]:
+    def measurements(self, limit: int = MEASUREMENTS_DEFAULT_LIMIT) -> list[dict[str, Any]]:
         rows = self.redis.lrange(MEASUREMENTS_KEY, 0, max(0, limit - 1))
         decoded = [json.loads(row) for row in rows]
         return list(reversed(decoded))

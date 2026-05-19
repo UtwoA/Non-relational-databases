@@ -7,11 +7,15 @@ import os
 import redis
 
 from src.redis_broker_demo.app import create_app
+from src.redis_broker_demo.health import check_services
 from src.redis_broker_demo.metrics import MetricsStore
 from src.redis_broker_demo.scenarios import (
     produce_jobs,
     run_consumer_forever,
+    run_all_scenarios,
+    run_delayed_consumer_scenario,
     run_direct_scenario,
+    run_kafka_scenario,
     run_pubsub_scenario,
     run_queue_scenario,
 )
@@ -39,21 +43,30 @@ def main() -> None:
     web_parser.add_argument("--port", type=int, default=int(os.getenv("PORT", "5000")))
 
     subparsers.add_parser("reset", help="Delete Additional_task demo keys from Redis")
+    subparsers.add_parser("doctor", help="Check Redis and Kafka availability")
 
     producer_parser = subparsers.add_parser("producer", help="Produce jobs into Redis")
-    producer_parser.add_argument("--mode", choices=["pubsub", "list", "stream", "zset"], required=True)
+    producer_parser.add_argument(
+        "--mode",
+        choices=["pubsub", "list", "stream", "zset", "kafka"],
+        required=True,
+    )
     producer_parser.add_argument("--jobs", type=int, default=100)
     producer_parser.add_argument("--burst", type=int, default=50)
 
     consumer_parser = subparsers.add_parser("consumer", help="Run a Redis consumer")
-    consumer_parser.add_argument("--mode", choices=["pubsub", "list", "stream", "zset"], required=True)
+    consumer_parser.add_argument(
+        "--mode",
+        choices=["pubsub", "list", "stream", "zset", "kafka"],
+        required=True,
+    )
     consumer_parser.add_argument("--processing-ms", type=int, default=300)
     consumer_parser.add_argument("--consumer-name", default="cli-consumer")
 
     scenario_parser = subparsers.add_parser("scenario", help="Run a full load scenario")
     scenario_parser.add_argument(
         "--mode",
-        choices=["direct", "pubsub", "list", "stream", "zset"],
+        choices=["direct", "pubsub", "list", "stream", "zset", "kafka"],
         required=True,
     )
     scenario_parser.add_argument("--jobs", type=int, default=100)
@@ -61,6 +74,26 @@ def main() -> None:
     scenario_parser.add_argument("--workers", type=int, default=2)
     scenario_parser.add_argument("--processing-ms", type=int, default=300)
     scenario_parser.add_argument("--acquire-timeout-ms", type=int, default=10)
+    scenario_parser.add_argument("--max-wait-seconds", type=float)
+
+    compare_parser = subparsers.add_parser("compare", help="Run all modes sequentially")
+    compare_parser.add_argument("--jobs", type=int, default=60)
+    compare_parser.add_argument("--burst", type=int, default=30)
+    compare_parser.add_argument("--workers", type=int, default=2)
+    compare_parser.add_argument("--processing-ms", type=int, default=150)
+    compare_parser.add_argument("--max-wait-seconds", type=float)
+
+    delayed_parser = subparsers.add_parser(
+        "delayed",
+        help="Produce first, start consumer later, then show backlog decay",
+    )
+    delayed_parser.add_argument("--mode", choices=["list", "stream", "zset", "kafka"], default="stream")
+    delayed_parser.add_argument("--jobs", type=int, default=60)
+    delayed_parser.add_argument("--burst", type=int, default=30)
+    delayed_parser.add_argument("--workers", type=int, default=2)
+    delayed_parser.add_argument("--processing-ms", type=int, default=150)
+    delayed_parser.add_argument("--consumer-delay-seconds", type=float, default=2.0)
+    delayed_parser.add_argument("--max-wait-seconds", type=float)
 
     args = parser.parse_args()
     redis_client = build_redis()
@@ -75,6 +108,10 @@ def main() -> None:
     if args.command == "reset":
         deleted = metrics.reset_all()
         print_json({"deleted_keys": deleted})
+        return
+
+    if args.command == "doctor":
+        print_json(check_services(redis_client))
         return
 
     if args.command == "producer":
@@ -113,6 +150,16 @@ def main() -> None:
                 burst=args.burst,
                 workers=args.workers,
                 processing_ms=args.processing_ms,
+                max_wait_seconds=args.max_wait_seconds,
+            )
+        elif args.mode == "kafka":
+            result = run_kafka_scenario(
+                redis_client,
+                jobs=args.jobs,
+                burst=args.burst,
+                workers=args.workers,
+                processing_ms=args.processing_ms,
+                max_wait_seconds=args.max_wait_seconds,
             )
         else:
             result = run_queue_scenario(
@@ -122,7 +169,34 @@ def main() -> None:
                 burst=args.burst,
                 workers=args.workers,
                 processing_ms=args.processing_ms,
+                max_wait_seconds=args.max_wait_seconds,
             )
+        print_json(result)
+        return
+
+    if args.command == "compare":
+        result = run_all_scenarios(
+            redis_client,
+            jobs=args.jobs,
+            burst=args.burst,
+            workers=args.workers,
+            processing_ms=args.processing_ms,
+            max_wait_seconds=args.max_wait_seconds,
+        )
+        print_json(result)
+        return
+
+    if args.command == "delayed":
+        result = run_delayed_consumer_scenario(
+            redis_client,
+            mode=args.mode,
+            jobs=args.jobs,
+            burst=args.burst,
+            workers=args.workers,
+            processing_ms=args.processing_ms,
+            consumer_delay_seconds=args.consumer_delay_seconds,
+            max_wait_seconds=args.max_wait_seconds,
+        )
         print_json(result)
         return
 
