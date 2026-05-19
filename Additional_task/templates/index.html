@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redis Broker Peak Smoothing</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #d9dee8;
+      --blue: #2563eb;
+      --green: #12805c;
+      --red: #c2410c;
+      --amber: #b7791f;
+      --violet: #7c3aed;
+      --teal: #0f766e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+    main {
+      width: min(1320px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-end;
+      margin-bottom: 20px;
+    }
+    h1, h2, h3 { margin: 0; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 18px; margin-bottom: 12px; }
+    p { margin: 8px 0 0; color: var(--muted); }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    input {
+      width: 100%;
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 10px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 14px;
+      color: white;
+      background: var(--blue);
+      font: 600 14px "Segoe UI", Arial, sans-serif;
+      cursor: pointer;
+    }
+    button.danger { background: var(--red); }
+    button:disabled { opacity: .55; cursor: wait; }
+    .status { color: var(--muted); font-size: 14px; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fff;
+    }
+    .card h3 {
+      margin-bottom: 6px;
+      font-size: 16px;
+    }
+    .card p {
+      min-height: 38px;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .metric {
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+    .metric strong { font-size: 20px; }
+    .chart {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 100px 1fr 64px;
+      gap: 10px;
+      align-items: center;
+      font-size: 13px;
+    }
+    .bar-track {
+      height: 16px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar {
+      height: 100%;
+      min-width: 2px;
+      background: var(--green);
+    }
+    .bar.direct { background: var(--red); }
+    .bar.pubsub { background: var(--violet); }
+    .bar.stream { background: var(--amber); }
+    .bar.zset { background: var(--teal); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      padding: 9px 8px;
+    }
+    th { color: var(--muted); font-weight: 600; }
+    @media (max-width: 1100px) {
+      .cards { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 760px) {
+      header { display: block; }
+      .controls, .cards { grid-template-columns: 1fr; }
+      .bar-row { grid-template-columns: 80px 1fr 50px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Redis как брокер сообщений</h1>
+        <p>Пять интерпретаций одной задачи: без очереди, Pub/Sub, Lists, Streams и Sorted Set.</p>
+      </div>
+      <div class="status" id="status">Готово</div>
+    </header>
+
+    <section class="panel">
+      <h2>Сценарий нагрузки</h2>
+      <div class="controls">
+        <label>Заданий
+          <input id="jobs" type="number" min="1" max="500" value="60">
+        </label>
+        <label>Размер пика
+          <input id="burst" type="number" min="1" max="500" value="30">
+        </label>
+        <label>Обработчиков
+          <input id="workers" type="number" min="1" max="20" value="2">
+        </label>
+        <label>Обработка, мс
+          <input id="processing" type="number" min="1" max="5000" value="250">
+        </label>
+      </div>
+      <div class="buttons">
+        <button data-mode="direct">Без очереди</button>
+        <button data-mode="pubsub">Redis Pub/Sub</button>
+        <button data-mode="list">Redis Lists</button>
+        <button data-mode="stream">Redis Streams</button>
+        <button data-mode="zset">Redis ZSET</button>
+        <button class="danger" id="reset">Сбросить Redis</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Метрики</h2>
+      <div class="cards" id="cards"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Накопление и спад</h2>
+      <div class="chart" id="chart"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Последние измерения</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Режим</th>
+            <th>Создано</th>
+            <th>Обработано</th>
+            <th>Отказано/потеряно</th>
+            <th>Накоплено</th>
+            <th>Pending</th>
+            <th>Средняя задержка</th>
+          </tr>
+        </thead>
+        <tbody id="measurements"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const modeNames = {
+      direct: "Без очереди",
+      pubsub: "Pub/Sub",
+      list: "Lists",
+      stream: "Streams",
+      zset: "ZSET"
+    };
+    const modeDescriptions = {
+      direct: "Пик бьет прямо в обработчик, лишние запросы отклоняются.",
+      pubsub: "Нет хранения: без подписчика сообщения теряются, backlog не растет.",
+      list: "Классическая очередь: LLEN растет на пике и снижается consumer-ами.",
+      stream: "Журнал с consumer group: видны XLEN, XPENDING и подтверждения.",
+      zset: "Отложенная очередь: score задает время готовности задания."
+    };
+    const statusEl = document.querySelector("#status");
+    const buttons = Array.from(document.querySelectorAll("button[data-mode]"));
+
+    function values() {
+      return {
+        jobs: Number(document.querySelector("#jobs").value),
+        burst: Number(document.querySelector("#burst").value),
+        workers: Number(document.querySelector("#workers").value),
+        processing_ms: Number(document.querySelector("#processing").value)
+      };
+    }
+
+    async function loadMetrics() {
+      const response = await fetch("/api/metrics");
+      const data = await response.json();
+      renderCards(data.metrics);
+      renderChart(data.measurements);
+      renderMeasurements(data.measurements.slice(-14).reverse());
+    }
+
+    function renderCards(metrics) {
+      document.querySelector("#cards").innerHTML = metrics.map(item => `
+        <article class="card">
+          <h3>${modeNames[item.mode]}</h3>
+          <p>${modeDescriptions[item.mode]}</p>
+          <div class="metric-grid">
+            <div class="metric"><span>Создано</span><strong>${item.produced}</strong></div>
+            <div class="metric"><span>Обработано</span><strong>${item.processed}</strong></div>
+            <div class="metric"><span>Потеряно</span><strong>${item.rejected}</strong></div>
+            <div class="metric"><span>Накоплено</span><strong>${item.backlog}</strong></div>
+            <div class="metric"><span>Pending</span><strong>${item.pending}</strong></div>
+            <div class="metric"><span>Задержка</span><strong>${item.avg_latency_ms}</strong></div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderChart(measurements) {
+      const recent = measurements.slice(-40);
+      const maxBacklog = Math.max(1, ...recent.map(item => visibleValue(item)));
+      document.querySelector("#chart").innerHTML = recent.map(item => {
+        const value = visibleValue(item);
+        const width = Math.max(2, Math.round(value / maxBacklog * 100));
+        return `
+          <div class="bar-row">
+            <span>${modeNames[item.mode]}</span>
+            <div class="bar-track"><div class="bar ${item.mode}" style="width:${width}%"></div></div>
+            <span>${value}</span>
+          </div>
+        `;
+      }).join("") || "<p>Пока нет измерений.</p>";
+    }
+
+    function visibleValue(item) {
+      if (item.mode === "direct" || item.mode === "pubsub") {
+        return item.rejected;
+      }
+      return item.backlog + item.pending;
+    }
+
+    function renderMeasurements(rows) {
+      document.querySelector("#measurements").innerHTML = rows.map(item => `
+        <tr>
+          <td>${modeNames[item.mode]}</td>
+          <td>${item.produced}</td>
+          <td>${item.processed}</td>
+          <td>${item.rejected}</td>
+          <td>${item.backlog}</td>
+          <td>${item.pending}</td>
+          <td>${item.avg_latency_ms} мс</td>
+        </tr>
+      `).join("");
+    }
+
+    async function runScenario(mode) {
+      buttons.forEach(button => button.disabled = true);
+      statusEl.textContent = `Выполняется: ${modeNames[mode]}`;
+      try {
+        await fetch("/api/scenario", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({mode, ...values()})
+        });
+        await loadMetrics();
+        statusEl.textContent = "Готово";
+      } catch (error) {
+        statusEl.textContent = `Ошибка: ${error}`;
+      } finally {
+        buttons.forEach(button => button.disabled = false);
+      }
+    }
+
+    buttons.forEach(button => {
+      button.addEventListener("click", () => runScenario(button.dataset.mode));
+    });
+
+    document.querySelector("#reset").addEventListener("click", async () => {
+      statusEl.textContent = "Сброс Redis";
+      await fetch("/api/reset", {method: "POST"});
+      await loadMetrics();
+      statusEl.textContent = "Готово";
+    });
+
+    loadMetrics();
+    setInterval(loadMetrics, 3000);
+  </script>
+</body>
+</html>

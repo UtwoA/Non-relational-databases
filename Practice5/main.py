@@ -37,7 +37,8 @@ def main() -> None:
 
     if args.command == "web":
         app = create_app(repository=repository, backend=args.backend)
-        app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=True)
+        debug = os.getenv("FLASK_DEBUG", "0").strip().lower() in {"1", "true", "yes", "y"}
+        app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=debug, use_reloader=debug)
         return
 
     if args.command == "seed":
@@ -55,15 +56,11 @@ def main() -> None:
             app = create_app(repository=None, backend=args.backend)
             repository = app.extensions["job_market_repository"]
         seed_repository(repository)
-        from src.job_market.services import now_utc
-
-        print(f"Demo time: {now_utc().isoformat()}")
         print("Vacancies by profession 'python developer':")
         for vacancy in repository.list_vacancies_by_profession("python developer", limit=3):
             print(f"- {vacancy.title} at {vacancy.employer_name}")
         print("Region stats for russia / moscow:")
-        stats = repository.get_region_stats("russia", "moscow")
-        print(stats)
+        print(repository.get_region_stats("russia", "moscow"))
         return
 
     parser.print_help(sys.stderr)

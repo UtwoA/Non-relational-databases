@@ -37,6 +37,28 @@ CREATE TABLE IF NOT EXISTS vacancies_by_id (
     updated_at timestamp
 );
 
+CREATE TABLE IF NOT EXISTS vacancies_feed (
+    feed_name text,
+    posted_date date,
+    posted_at timestamp,
+    vacancy_id uuid,
+    employer_id uuid,
+    employer_name text,
+    title text,
+    profession text,
+    country text,
+    region text,
+    city text,
+    remote boolean,
+    employment_type text,
+    experience_level text,
+    salary_from int,
+    salary_to int,
+    currency text,
+    active boolean,
+    PRIMARY KEY ((feed_name), posted_date, posted_at, vacancy_id)
+) WITH CLUSTERING ORDER BY (posted_date DESC, posted_at DESC, vacancy_id ASC);
+
 CREATE TABLE IF NOT EXISTS vacancies_by_employer (
     employer_id uuid,
     posted_date date,
@@ -110,6 +132,65 @@ CREATE TABLE IF NOT EXISTS vacancies_by_remote (
     currency text,
     active boolean,
     PRIMARY KEY ((remote), posted_date, posted_at, vacancy_id)
+) WITH CLUSTERING ORDER BY (posted_date DESC, posted_at DESC, vacancy_id ASC);
+
+CREATE TABLE IF NOT EXISTS vacancies_by_employment_type (
+    employment_type text,
+    posted_date date,
+    posted_at timestamp,
+    vacancy_id uuid,
+    employer_id uuid,
+    employer_name text,
+    title text,
+    profession text,
+    country text,
+    region text,
+    city text,
+    remote boolean,
+    salary_from int,
+    salary_to int,
+    currency text,
+    active boolean,
+    PRIMARY KEY ((employment_type), posted_date, posted_at, vacancy_id)
+) WITH CLUSTERING ORDER BY (posted_date DESC, posted_at DESC, vacancy_id ASC);
+
+CREATE TABLE IF NOT EXISTS vacancies_by_experience_level (
+    experience_level text,
+    posted_date date,
+    posted_at timestamp,
+    vacancy_id uuid,
+    employer_id uuid,
+    employer_name text,
+    title text,
+    profession text,
+    country text,
+    region text,
+    city text,
+    remote boolean,
+    salary_from int,
+    salary_to int,
+    currency text,
+    active boolean,
+    PRIMARY KEY ((experience_level), posted_date, posted_at, vacancy_id)
+) WITH CLUSTERING ORDER BY (posted_date DESC, posted_at DESC, vacancy_id ASC);
+
+CREATE TABLE IF NOT EXISTS vacancies_by_city (
+    country text,
+    city text,
+    posted_date date,
+    posted_at timestamp,
+    vacancy_id uuid,
+    employer_id uuid,
+    employer_name text,
+    title text,
+    profession text,
+    region text,
+    remote boolean,
+    salary_from int,
+    salary_to int,
+    currency text,
+    active boolean,
+    PRIMARY KEY ((country, city), posted_date, posted_at, vacancy_id)
 ) WITH CLUSTERING ORDER BY (posted_date DESC, posted_at DESC, vacancy_id ASC);
 
 CREATE TABLE IF NOT EXISTS region_stats_by_key (

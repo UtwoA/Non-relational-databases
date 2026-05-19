@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">Физическая схема в нотации Чеботко</title>
+  <desc id="desc">Физическая Cassandra-схема с partition key, clustering columns и денормализованными колонками для чтения.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .table { fill: #ffffff; stroke: #1f2937; stroke-width: 2; }
+      .head { fill: #e0f2fe; stroke: #1f2937; stroke-width: 2; }
+      .head2 { fill: #dcfce7; stroke: #1f2937; stroke-width: 2; }
+      .head3 { fill: #ffedd5; stroke: #1f2937; stroke-width: 2; }
+      .row { stroke: #cbd5e1; stroke-width: 1; }
+      .h1 { font: 700 28px "Segoe UI", Arial, sans-serif; fill: #111827; }
+      .h2 { font: 700 17px "Segoe UI", Arial, sans-serif; fill: #111827; }
+      .t { font: 13px "Segoe UI", Arial, sans-serif; fill: #111827; }
+      .small { font: 12px "Segoe UI", Arial, sans-serif; fill: #334155; }
+      .mono { font: 12px Consolas, "Courier New", monospace; fill: #0f172a; }
+      .pk { fill: #047857; font-weight: 700; }
+      .ck { fill: #7c3aed; font-weight: 700; }
+      .col { fill: #475569; }
+      .note { fill: #fefce8; stroke: #a16207; stroke-width: 1.5; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1600" height="1120"/>
+  <text x="40" y="52" class="h1">Физическая схема базы данных в нотации Чеботко</text>
+  <text x="40" y="80" class="small">Все выборки выполняются по partition key. Вторичные индексы и ALLOW FILTERING не используются.</text>
+
+  <!-- Helper table template drawn manually -->
+  <g transform="translate(40,115)">
+    <rect class="table" width="470" height="138" rx="6"/>
+    <rect class="head" width="470" height="38" rx="6"/>
+    <text x="16" y="25" class="h2">employers_by_id</text>
+    <line class="row" x1="0" y1="38" x2="470" y2="38"/>
+    <text x="16" y="62" class="mono"><tspan class="pk">employer_id uuid</tspan>  partition key</text>
+    <text x="16" y="84" class="mono">name, industry, website</text>
+    <text x="16" y="106" class="mono">country, city, active</text>
+    <text x="16" y="128" class="mono">created_at, updated_at</text>
+  </g>
+
+  <g transform="translate(565,115)">
+    <rect class="table" width="470" height="184" rx="6"/>
+    <rect class="head" width="470" height="38" rx="6"/>
+    <text x="16" y="25" class="h2">vacancies_by_id</text>
+    <line class="row" x1="0" y1="38" x2="470" y2="38"/>
+    <text x="16" y="62" class="mono"><tspan class="pk">vacancy_id uuid</tspan>  partition key</text>
+    <text x="16" y="84" class="mono">employer_id, employer_name, title</text>
+    <text x="16" y="106" class="mono">profession, country, region, city</text>
+    <text x="16" y="128" class="mono">remote, employment_type, experience_level</text>
+    <text x="16" y="150" class="mono">salary_from, salary_to, currency</text>
+    <text x="16" y="172" class="mono">posted_at, description, skills, active, updated_at</text>
+  </g>
+
+  <g transform="translate(1090,115)">
+    <rect class="table" width="470" height="184" rx="6"/>
+    <rect class="head2" width="470" height="38" rx="6"/>
+    <text x="16" y="25" class="h2">vacancies_feed</text>
+    <line class="row" x1="0" y1="38" x2="470" y2="38"/>
+    <text x="16" y="62" class="mono"><tspan class="pk">feed_name text</tspan>  partition key</text>
+    <text x="16" y="84" class="mono"><tspan class="ck">posted_date date</tspan>  clustering DESC</text>
+    <text x="16" y="106" class="mono"><tspan class="ck">posted_at timestamp</tspan>  clustering DESC</text>
+    <text x="16" y="128" class="mono"><tspan class="ck">vacancy_id uuid</tspan>  clustering ASC</text>
+    <text x="16" y="150" class="mono">employer_id, employer_name, title, profession</text>
+    <text x="16" y="172" class="mono">location, remote, salary, currency, active</text>
+  </g>
+
+  <g transform="translate(40,350)">
+    <rect class="table" width="470" height="184" rx="6"/>
+    <rect class="head2" width="470" height="38" rx="6"/>
+    <text x="16" y="25" class="h2">vacancies_by_profession</text>
+    <line class="row" x1="0" y1="38" x2="470" y2="38"/>
+    <text x="16" y="62" class="mono"><tspan class="pk">profession text</tspan>  partition key</text>
+    <text x="16" y="84" class="mono"><tspan class="ck">posted_date date</tspan>, <tspan class="ck">posted_at timestamp</tspan></text>
+    <text x="16" y="106" class="mono"><tspan class="ck">vacancy_id uuid</tspan></text>
+    <text x="16" y="128" class="mono">employer_id, employer_name, title</text>
+    <text x="16" y="150" class="mono">country, region, city, remote</text>
+    <text x="16" y="172" class="mono">salary_from, salary_to, currency, active</text>
+  </g>
+
+  <g transform="translate(565,350)">
+    <rect class="table" width="470" height="184" rx="6"/>
+    <rect class="head2" width="470" height="38" rx="6"/>
+    <text x="16" y="25" class="h2">vacancies_by_region</text>
+    <line class="row" x1="0" y1="38" x2="470" y2="38"/>
+    <text x="16" y="62" class="mono"><tspan class="pk">country text, region text</tspan>  partition key</text>
+    <text x="16" y="84" class="mono"><tspan class="ck">posted_date date</tspan>, <tspan class="ck">posted_at timestamp</tspan></text>
+    <text x="16" y="106" class="mono"><tspan class="ck">vacancy_id uuid</tspan></text>
+    <text x="16" y="128" class="mono">employer_id, employer_name, title</text>
+    <text x="16" y="150" class="mono">profession, city, remote</text>
+    <text x="16" y="172" class="mono">salary_from, salary_to, currency, active</text>
+  </g>
+
+  <g transform="translate(1090,350)">
+    <rect class="table" width="470" height="184" rx="6"/>
+    <rect class="head2" width="470" height="38" rx="6"/>
+    <text x="16" y="25" class="h2">vacancies_by_remote</text>
+    <line class="row" x1="0" y1="38" x2="470" y2="38"/>
+    <text x="16" y="62" class="mono"><tspan class="pk">remote boolean</tspan>  partition key</text>
+    <text x="16" y="84" class="mono"><tspan class="ck">posted_date date</tspan>, <tspan class="ck">posted_at timestamp</tspan></text>
+    <text x="16" y="106" class="mono"><tspan class="ck">vacancy_id uuid</tspan></text>
+    <text x="16" y="128" class="mono">employer_id, employer_name, title</text>
+    <text x="16" y="150" class="mono">profession, country, region, city</text>
+    <text x="16" y="172" class="mono">salary_from, salary_to, currency, active</text>
+  </g>
+
+  <g transform="translate(40,585)">
+    <rect class="table" width="470" height="184" rx="6"/>
+    <rect class="head2" width="470" height="38" rx="6"/>
+    <text x="16" y="25" class="h2">vacancies_by_employment_type</text>
+    <line class="row" x1="0" y1="38" x2="470" y2="38"/>
+    <text x="16" y="62" class="mono"><tspan class="pk">employment_type text</tspan>  partition key</text>
+    <text x="16" y="84" class="mono"><tspan class="ck">posted_date date</tspan>, <tspan class="ck">posted_at timestamp</tspan></text>
+    <text x="16" y="106" class="mono"><tspan class="ck">vacancy_id uuid</tspan></text>
+    <text x="16" y="128" class="mono">employer_id, employer_name, title</text>
+    <text x="16" y="150" class="mono">profession, location, remote</text>
+    <text x="16" y="172" class="mono">salary_from, salary_to, currency, active</text>
+  </g>
+
+  <g transform="translate(565,585)">
+    <rect class="table" width="470" height="184" rx="6"/>
+    <rect class="head2" width="470" height="38" rx="6"/>
+    <text x="16" y="25" class="h2">vacancies_by_experience_level</text>
+    <line class="row" x1="0" y1="38" x2="470" y2="38"/>
+    <text x="16" y="62" class="mono"><tspan class="pk">experience_level text</tspan>  partition key</text>
+    <text x="16" y="84" class="mono"><tspan class="ck">posted_date date</tspan>, <tspan class="ck">posted_at timestamp</tspan></text>
+    <text x="16" y="106" class="mono"><tspan class="ck">vacancy_id uuid</tspan></text>
+    <text x="16" y="128" class="mono">employer_id, employer_name, title</text>
+    <text x="16" y="150" class="mono">profession, location, remote</text>
+    <text x="16" y="172" class="mono">salary_from, salary_to, currency, active</text>
+  </g>
+
+  <g transform="translate(1090,585)">
+    <rect class="table" width="470" height="184" rx="6"/>
+    <rect class="head2" width="470" height="38" rx="6"/>
+    <text x="16" y="25" class="h2">vacancies_by_city</text>
+    <line class="row" x1="0" y1="38" x2="470" y2="38"/>
+    <text x="16" y="62" class="mono"><tspan class="pk">country text, city text</tspan>  partition key</text>
+    <text x="16" y="84" class="mono"><tspan class="ck">posted_date date</tspan>, <tspan class="ck">posted_at timestamp</tspan></text>
+    <text x="16" y="106" class="mono"><tspan class="ck">vacancy_id uuid</tspan></text>
+    <text x="16" y="128" class="mono">employer_id, employer_name, title</text>
+    <text x="16" y="150" class="mono">profession, region, remote</text>
+    <text x="16" y="172" class="mono">salary_from, salary_to, currency, active</text>
+  </g>
+
+  <g transform="translate(40,820)">
+    <rect class="table" width="470" height="184" rx="6"/>
+    <rect class="head2" width="470" height="38" rx="6"/>
+    <text x="16" y="25" class="h2">vacancies_by_employer</text>
+    <line class="row" x1="0" y1="38" x2="470" y2="38"/>
+    <text x="16" y="62" class="mono"><tspan class="pk">employer_id uuid</tspan>  partition key</text>
+    <text x="16" y="84" class="mono"><tspan class="ck">posted_date date</tspan>, <tspan class="ck">posted_at timestamp</tspan></text>
+    <text x="16" y="106" class="mono"><tspan class="ck">vacancy_id uuid</tspan></text>
+    <text x="16" y="128" class="mono">title, profession, country, region, city</text>
+    <text x="16" y="150" class="mono">remote, salary_from, salary_to</text>
+    <text x="16" y="172" class="mono">currency, active</text>
+  </g>
+
+  <g transform="translate(565,820)">
+    <rect class="table" width="470" height="184" rx="6"/>
+    <rect class="head3" width="470" height="38" rx="6"/>
+    <text x="16" y="25" class="h2">region_stats_by_key</text>
+    <line class="row" x1="0" y1="38" x2="470" y2="38"/>
+    <text x="16" y="62" class="mono"><tspan class="pk">country text, region text</tspan>  partition key</text>
+    <text x="16" y="84" class="mono"><tspan class="ck">posted_date date</tspan>  clustering DESC</text>
+    <text x="16" y="106" class="mono">vacancy_count int</text>
+    <text x="16" y="128" class="mono">average_salary_from double</text>
+    <text x="16" y="150" class="mono">average_salary_to double</text>
+    <text x="16" y="172" class="mono">remote_count, active_count, updated_at</text>
+  </g>
+
+  <g transform="translate(1090,820)">
+    <rect class="note" width="470" height="184" rx="6"/>
+    <text x="16" y="32" class="h2">Обозначения</text>
+    <text x="16" y="64" class="mono"><tspan class="pk">PK</tspan> - partition key</text>
+    <text x="16" y="90" class="mono"><tspan class="ck">CK</tspan> - clustering column</text>
+    <text x="16" y="116" class="mono">DESC/ASC - порядок сортировки внутри partition</text>
+    <text x="16" y="142" class="mono">Дублирование колонок - осознанная денормализация</text>
+    <text x="16" y="168" class="mono">Каждая таблица обслуживает конкретный сценарий чтения</text>
+  </g>
+</svg>

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 from datetime import date, datetime, timezone
 from typing import Any
 from uuid import UUID, uuid4
@@ -41,27 +40,27 @@ def parse_bool(value: Any, field_name: str) -> bool:
     raise ValueError(f"Field '{field_name}' must be boolean")
 
 
-def serialize_datetime(value: datetime) -> str:
-    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
-
-
-def serialize_date(value: date) -> str:
-    return value.isoformat()
+def coerce_limit(value: str | None, default: int = 50, maximum: int = 200) -> int:
+    if value is None:
+        return default
+    limit = int(value)
+    if limit < 1:
+        raise ValueError("limit must be positive")
+    return min(limit, maximum)
 
 
 def employer_from_payload(payload: dict[str, Any], employer_id: UUID | None = None) -> Employer:
-    required = ["name", "industry", "country", "city"]
-    for field_name in required:
+    for field_name in ["name", "industry", "country", "city"]:
         if not payload.get(field_name):
             raise ValueError(f"Field '{field_name}' is required")
     return Employer(
         employer_id=parse_uuid(employer_id or payload.get("employer_id")),
         name=str(payload["name"]).strip(),
         industry=str(payload["industry"]).strip(),
-        website=(str(payload["website"]).strip() if payload.get("website") else None),
+        website=str(payload["website"]).strip() if payload.get("website") else None,
         country=normalize_text(str(payload["country"])),
         city=normalize_text(str(payload["city"])),
-        active=bool(payload.get("active", True)),
+        active=parse_bool(payload.get("active", True), "active"),
     )
 
 
@@ -108,13 +107,23 @@ def vacancy_from_payload(
         salary_from=payload.get("salary_from"),
         salary_to=payload.get("salary_to"),
         currency=str(payload["currency"]).strip().upper(),
-        posted_at=parse_datetime(payload.get("posted_at")) if payload.get("posted_at") is not None else (
-            existing_posted_at or now_utc()
-        ),
+        posted_at=parse_datetime(payload.get("posted_at")) if payload.get("posted_at") else existing_posted_at or now_utc(),
         description=str(payload["description"]).strip(),
         skills=tuple(sorted({str(skill).strip().lower() for skill in skills if str(skill).strip()})),
-        active=bool(payload.get("active", True)),
+        active=parse_bool(payload.get("active", True), "active"),
     )
+
+
+def serialize_datetime(value: datetime) -> str:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def serialize_date(value: date) -> str:
+    if hasattr(value, "date") and not isinstance(value.date, int):
+        value = value.date()
+    return value.isoformat()
 
 
 def serialize_employer(employer: Employer) -> dict[str, Any]:
@@ -155,9 +164,7 @@ def serialize_vacancy(vacancy: Vacancy) -> dict[str, Any]:
     }
 
 
-def serialize_stats(stats: RegionStats | None) -> dict[str, Any] | None:
-    if stats is None:
-        return None
+def serialize_stats(stats: RegionStats) -> dict[str, Any]:
     return {
         "country": stats.country,
         "region": stats.region,
@@ -169,12 +176,3 @@ def serialize_stats(stats: RegionStats | None) -> dict[str, Any] | None:
         "active_count": stats.active_count,
         "updated_at": serialize_datetime(stats.updated_at),
     }
-
-
-def coerce_limit(value: str | None, default: int = 50, maximum: int = 200) -> int:
-    if value is None:
-        return default
-    limit = int(value)
-    if limit < 1:
-        raise ValueError("limit must be positive")
-    return min(limit, maximum)

@@ -1,0 +1,173 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1250" viewBox="0 0 1800 1250" role="img" aria-labelledby="title desc">
+  <title id="title">ER-диаграмма в нотации Чена для статистики вакансий</title>
+  <desc id="desc">Концептуальная модель предметной области: работодатели публикуют вакансии, вакансии относятся к профессиям, локациям, классификаторам и навыкам; по регионам формируется статистика.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .frame { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
+      .entity { fill: #ffffff; stroke: #111827; stroke-width: 2.4; }
+      .weak { fill: #fefce8; stroke: #854d0e; stroke-width: 2.4; }
+      .rel { fill: #eff6ff; stroke: #1d4ed8; stroke-width: 2.2; }
+      .attr { fill: #f1f5f9; stroke: #475569; stroke-width: 1.8; }
+      .key { fill: #ecfdf5; stroke: #047857; stroke-width: 2; }
+      .multi { fill: #fff7ed; stroke: #c2410c; stroke-width: 2; }
+      .line { stroke: #334155; stroke-width: 1.7; fill: none; }
+      text { font-family: "Segoe UI", Arial, sans-serif; fill: #111827; }
+      .h1 { font-size: 30px; font-weight: 700; }
+      .h2 { font-size: 19px; font-weight: 700; }
+      .t { font-size: 15px; }
+      .small { font-size: 13px; fill: #334155; }
+      .underline { text-decoration: underline; font-weight: 700; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1800" height="1250"/>
+  <text x="50" y="55" class="h1">ER-диаграмма базы данных в нотации Чена</text>
+  <text x="50" y="85" class="small">Вариант 14: статистика вакансий на рынке труда</text>
+  <rect class="frame" x="40" y="115" width="1720" height="1085" rx="8"/>
+
+  <!-- Employer -->
+  <rect class="entity" x="120" y="470" width="220" height="78" rx="2"/>
+  <text x="230" y="502" text-anchor="middle" class="h2">Работодатель</text>
+  <text x="230" y="527" text-anchor="middle" class="small">Employer</text>
+
+  <ellipse class="key" cx="110" cy="350" rx="92" ry="30"/>
+  <text x="110" y="355" text-anchor="middle" class="t underline">employer_id</text>
+  <ellipse class="attr" cx="255" cy="320" rx="70" ry="28"/>
+  <text x="255" y="325" text-anchor="middle" class="t">name</text>
+  <ellipse class="attr" cx="90" cy="655" rx="78" ry="28"/>
+  <text x="90" y="660" text-anchor="middle" class="t">industry</text>
+  <ellipse class="attr" cx="255" cy="685" rx="74" ry="28"/>
+  <text x="255" y="690" text-anchor="middle" class="t">website</text>
+  <ellipse class="attr" cx="390" cy="610" rx="62" ry="28"/>
+  <text x="390" y="615" text-anchor="middle" class="t">active</text>
+
+  <path class="line" d="M137 375 L185 470"/>
+  <path class="line" d="M252 348 L240 470"/>
+  <path class="line" d="M108 628 L175 548"/>
+  <path class="line" d="M252 657 L236 548"/>
+  <path class="line" d="M367 591 L304 548"/>
+
+  <!-- Publishes relationship -->
+  <polygon class="rel" points="510,470 610,512 510,554 410,512"/>
+  <text x="510" y="508" text-anchor="middle" class="h2">публикует</text>
+  <text x="510" y="531" text-anchor="middle" class="small">1 : N</text>
+  <path class="line" d="M340 512 L410 512"/>
+  <path class="line" d="M610 512 L710 512"/>
+  <text x="365" y="495" class="small">1</text>
+  <text x="680" y="495" class="small">N</text>
+
+  <!-- Vacancy -->
+  <rect class="entity" x="710" y="455" width="240" height="92" rx="2"/>
+  <text x="830" y="492" text-anchor="middle" class="h2">Вакансия</text>
+  <text x="830" y="518" text-anchor="middle" class="small">Vacancy</text>
+
+  <ellipse class="key" cx="650" cy="300" rx="90" ry="30"/>
+  <text x="650" y="305" text-anchor="middle" class="t underline">vacancy_id</text>
+  <ellipse class="attr" cx="815" cy="250" rx="66" ry="28"/>
+  <text x="815" y="255" text-anchor="middle" class="t">title</text>
+  <ellipse class="attr" cx="980" cy="300" rx="86" ry="28"/>
+  <text x="980" y="305" text-anchor="middle" class="t">posted_at</text>
+  <ellipse class="attr" cx="570" cy="720" rx="86" ry="28"/>
+  <text x="570" y="725" text-anchor="middle" class="t">salary_from</text>
+  <ellipse class="attr" cx="755" cy="780" rx="82" ry="28"/>
+  <text x="755" y="785" text-anchor="middle" class="t">salary_to</text>
+  <ellipse class="attr" cx="950" cy="760" rx="72" ry="28"/>
+  <text x="950" y="765" text-anchor="middle" class="t">currency</text>
+  <ellipse class="attr" cx="1080" cy="595" rx="66" ry="28"/>
+  <text x="1080" y="600" text-anchor="middle" class="t">remote</text>
+
+  <path class="line" d="M681 328 L760 455"/>
+  <path class="line" d="M817 278 L826 455"/>
+  <path class="line" d="M949 326 L887 455"/>
+  <path class="line" d="M600 700 L740 547"/>
+  <path class="line" d="M764 752 L810 547"/>
+  <path class="line" d="M932 734 L880 547"/>
+  <path class="line" d="M1023 584 L950 525"/>
+
+  <!-- Profession -->
+  <rect class="entity" x="1335" y="180" width="210" height="76" rx="2"/>
+  <text x="1440" y="211" text-anchor="middle" class="h2">Профессия</text>
+  <text x="1440" y="236" text-anchor="middle" class="small">Profession</text>
+  <ellipse class="key" cx="1440" cy="85" rx="104" ry="30"/>
+  <text x="1440" y="90" text-anchor="middle" class="t underline">profession</text>
+  <path class="line" d="M1440 115 L1440 180"/>
+
+  <polygon class="rel" points="1190,260 1285,302 1190,344 1095,302"/>
+  <text x="1190" y="299" text-anchor="middle" class="h2">относится</text>
+  <text x="1190" y="322" text-anchor="middle" class="small">N : 1</text>
+  <path class="line" d="M908 455 L1095 302"/>
+  <path class="line" d="M1285 302 L1335 218"/>
+
+  <!-- Location -->
+  <rect class="entity" x="1340" y="500" width="210" height="82" rx="2"/>
+  <text x="1445" y="532" text-anchor="middle" class="h2">Локация</text>
+  <text x="1445" y="557" text-anchor="middle" class="small">Location</text>
+  <ellipse class="key" cx="1300" cy="685" rx="80" ry="28"/>
+  <text x="1300" y="690" text-anchor="middle" class="t underline">country</text>
+  <ellipse class="key" cx="1450" cy="725" rx="76" ry="28"/>
+  <text x="1450" y="730" text-anchor="middle" class="t underline">region</text>
+  <ellipse class="attr" cx="1605" cy="680" rx="60" ry="28"/>
+  <text x="1605" y="685" text-anchor="middle" class="t">city</text>
+  <path class="line" d="M1322 660 L1392 582"/>
+  <path class="line" d="M1449 697 L1446 582"/>
+  <path class="line" d="M1576 663 L1502 582"/>
+
+  <polygon class="rel" points="1190,500 1285,542 1190,584 1095,542"/>
+  <text x="1190" y="539" text-anchor="middle" class="h2">размещена</text>
+  <text x="1190" y="562" text-anchor="middle" class="small">N : 1</text>
+  <path class="line" d="M950 505 L1095 542"/>
+  <path class="line" d="M1285 542 L1340 542"/>
+
+  <!-- Classifiers -->
+  <rect class="entity" x="1330" y="880" width="245" height="82" rx="2"/>
+  <text x="1452" y="912" text-anchor="middle" class="h2">Классификаторы</text>
+  <text x="1452" y="937" text-anchor="middle" class="small">Employment, experience</text>
+  <ellipse class="key" cx="1325" cy="1060" rx="118" ry="30"/>
+  <text x="1325" y="1065" text-anchor="middle" class="t underline">employment_type</text>
+  <ellipse class="key" cx="1585" cy="1060" rx="116" ry="30"/>
+  <text x="1585" y="1065" text-anchor="middle" class="t underline">experience_level</text>
+  <path class="line" d="M1344 1031 L1403 962"/>
+  <path class="line" d="M1568 1031 L1505 962"/>
+
+  <polygon class="rel" points="1165,825 1255,865 1165,905 1075,865"/>
+  <text x="1165" y="862" text-anchor="middle" class="h2">имеет</text>
+  <text x="1165" y="884" text-anchor="middle" class="small">N : 1</text>
+  <path class="line" d="M925 547 L1075 865"/>
+  <path class="line" d="M1255 865 L1330 920"/>
+
+  <!-- Skills -->
+  <rect class="entity" x="730" y="950" width="210" height="76" rx="2"/>
+  <text x="835" y="981" text-anchor="middle" class="h2">Навык</text>
+  <text x="835" y="1006" text-anchor="middle" class="small">Skill</text>
+  <ellipse class="multi" cx="835" cy="1120" rx="95" ry="31"/>
+  <ellipse class="multi" cx="835" cy="1120" rx="84" ry="23"/>
+  <text x="835" y="1125" text-anchor="middle" class="t underline">skill_name</text>
+  <path class="line" d="M835 1089 L835 1026"/>
+
+  <polygon class="rel" points="705,820 795,860 705,900 615,860"/>
+  <text x="705" y="857" text-anchor="middle" class="h2">требует</text>
+  <text x="705" y="879" text-anchor="middle" class="small">M : N</text>
+  <path class="line" d="M800 547 L705 820"/>
+  <path class="line" d="M755 900 L780 950"/>
+
+  <!-- Region statistics -->
+  <rect class="weak" x="170" y="960" width="260" height="86" rx="2"/>
+  <text x="300" y="994" text-anchor="middle" class="h2">Статистика региона</text>
+  <text x="300" y="1021" text-anchor="middle" class="small">RegionStats</text>
+  <ellipse class="key" cx="95" cy="1085" rx="88" ry="28"/>
+  <text x="95" y="1090" text-anchor="middle" class="t underline">posted_date</text>
+  <ellipse class="attr" cx="310" cy="1135" rx="104" ry="28"/>
+  <text x="310" y="1140" text-anchor="middle" class="t">vacancy_count</text>
+  <ellipse class="attr" cx="505" cy="1085" rx="96" ry="28"/>
+  <text x="505" y="1090" text-anchor="middle" class="t">avg_salary</text>
+  <path class="line" d="M135 1067 L205 1046"/>
+  <path class="line" d="M308 1107 L304 1046"/>
+  <path class="line" d="M468 1072 L395 1046"/>
+
+  <polygon class="rel" points="325,800 425,842 325,884 225,842"/>
+  <text x="325" y="839" text-anchor="middle" class="h2">агрегирует</text>
+  <text x="325" y="862" text-anchor="middle" class="small">1 : N</text>
+  <path class="line" d="M730 547 C610 650, 520 745, 425 842"/>
+  <path class="line" d="M316 884 L306 960"/>
+</svg>

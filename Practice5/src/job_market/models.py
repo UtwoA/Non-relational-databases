@@ -13,12 +13,6 @@ def normalize_text(value: str) -> str:
     return " ".join(value.strip().split()).lower()
 
 
-def normalize_optional_text(value: str | None) -> str | None:
-    if value is None:
-        return None
-    return normalize_text(value)
-
-
 @dataclass(slots=True)
 class Employer:
     employer_id: UUID

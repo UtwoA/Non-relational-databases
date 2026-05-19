@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-from uuid import uuid4
+from uuid import NAMESPACE_URL, uuid5
 
-from .models import Employer, Vacancy
-from .services import employer_from_payload, now_utc, vacancy_from_payload
+from .services import employer_from_payload, vacancy_from_payload
+
+
+def stable_id(kind: str, name: str) -> str:
+    return str(uuid5(NAMESPACE_URL, f"practice5-job-market/{kind}/{name}"))
 
 
 def demo_employers() -> list[dict]:
     return [
         {
+            "employer_id": stable_id("employer", "sky-analytics"),
             "name": "Sky Analytics",
             "industry": "Data and BI",
             "website": "https://sky-analytics.example",
@@ -16,6 +20,7 @@ def demo_employers() -> list[dict]:
             "city": "moscow",
         },
         {
+            "employer_id": stable_id("employer", "northwind-hiring"),
             "name": "Northwind Hiring",
             "industry": "Recruiting",
             "website": "https://northwind.example",
@@ -23,11 +28,52 @@ def demo_employers() -> list[dict]:
             "city": "saint petersburg",
         },
         {
+            "employer_id": stable_id("employer", "cloud-harbor"),
             "name": "Cloud Harbor",
             "industry": "Cloud services",
             "website": "https://cloud-harbor.example",
             "country": "kazakhstan",
             "city": "almaty",
+        },
+        {
+            "employer_id": stable_id("employer", "fintech-lab"),
+            "name": "FinTech Lab",
+            "industry": "Financial technologies",
+            "website": "https://fintech-lab.example",
+            "country": "russia",
+            "city": "kazan",
+        },
+        {
+            "employer_id": stable_id("employer", "med-data"),
+            "name": "Med Data",
+            "industry": "Healthcare analytics",
+            "website": "https://med-data.example",
+            "country": "russia",
+            "city": "novosibirsk",
+        },
+        {
+            "employer_id": stable_id("employer", "edu-cloud"),
+            "name": "Edu Cloud",
+            "industry": "Education",
+            "website": "https://edu-cloud.example",
+            "country": "belarus",
+            "city": "minsk",
+        },
+        {
+            "employer_id": stable_id("employer", "retail-pulse"),
+            "name": "Retail Pulse",
+            "industry": "Retail analytics",
+            "website": "https://retail-pulse.example",
+            "country": "russia",
+            "city": "ekaterinburg",
+        },
+        {
+            "employer_id": stable_id("employer", "gameforge-east"),
+            "name": "GameForge East",
+            "industry": "Game development",
+            "website": "https://gameforge-east.example",
+            "country": "armenia",
+            "city": "yerevan",
         },
     ]
 
@@ -35,6 +81,7 @@ def demo_employers() -> list[dict]:
 def demo_vacancies(employer_ids: list[str]) -> list[dict]:
     return [
         {
+            "vacancy_id": stable_id("vacancy", "sky-analytics-senior-python-developer"),
             "employer_id": employer_ids[0],
             "employer_name": "Sky Analytics",
             "title": "Senior Python Developer",
@@ -50,8 +97,10 @@ def demo_vacancies(employer_ids: list[str]) -> list[dict]:
             "currency": "RUB",
             "description": "Build data products and APIs.",
             "skills": ["python", "sql", "cassandra", "flask"],
+            "posted_at": "2026-05-19T09:10:00Z",
         },
         {
+            "vacancy_id": stable_id("vacancy", "sky-analytics-data-engineer"),
             "employer_id": employer_ids[0],
             "employer_name": "Sky Analytics",
             "title": "Data Engineer",
@@ -67,8 +116,10 @@ def demo_vacancies(employer_ids: list[str]) -> list[dict]:
             "currency": "RUB",
             "description": "Support analytics pipelines.",
             "skills": ["python", "airflow", "spark"],
+            "posted_at": "2026-05-18T11:30:00Z",
         },
         {
+            "vacancy_id": stable_id("vacancy", "northwind-hiring-data-analyst"),
             "employer_id": employer_ids[1],
             "employer_name": "Northwind Hiring",
             "title": "Data Analyst",
@@ -84,8 +135,10 @@ def demo_vacancies(employer_ids: list[str]) -> list[dict]:
             "currency": "RUB",
             "description": "Prepare business reports.",
             "skills": ["sql", "power bi", "statistics"],
+            "posted_at": "2026-05-17T10:00:00Z",
         },
         {
+            "vacancy_id": stable_id("vacancy", "cloud-harbor-remote-python-developer"),
             "employer_id": employer_ids[2],
             "employer_name": "Cloud Harbor",
             "title": "Remote Python Developer",
@@ -101,8 +154,10 @@ def demo_vacancies(employer_ids: list[str]) -> list[dict]:
             "currency": "KZT",
             "description": "Support a cloud platform.",
             "skills": ["python", "docker", "postgresql"],
+            "posted_at": "2026-05-16T14:20:00Z",
         },
         {
+            "vacancy_id": stable_id("vacancy", "cloud-harbor-platform-engineer"),
             "employer_id": employer_ids[2],
             "employer_name": "Cloud Harbor",
             "title": "Platform Engineer",
@@ -118,6 +173,197 @@ def demo_vacancies(employer_ids: list[str]) -> list[dict]:
             "currency": "KZT",
             "description": "Manage deployment pipelines.",
             "skills": ["kubernetes", "terraform", "linux"],
+            "posted_at": "2026-05-15T12:00:00Z",
+        },
+        {
+            "vacancy_id": stable_id("vacancy", "fintech-lab-backend-go-developer"),
+            "employer_id": employer_ids[3],
+            "employer_name": "FinTech Lab",
+            "title": "Backend Go Developer",
+            "profession": "backend developer",
+            "country": "russia",
+            "region": "tatarstan",
+            "city": "kazan",
+            "remote": True,
+            "employment_type": "full-time",
+            "experience_level": "middle",
+            "salary_from": 230000,
+            "salary_to": 310000,
+            "currency": "RUB",
+            "description": "Develop transaction services.",
+            "skills": ["go", "kafka", "postgresql"],
+            "posted_at": "2026-05-14T16:45:00Z",
+        },
+        {
+            "vacancy_id": stable_id("vacancy", "fintech-lab-data-scientist"),
+            "employer_id": employer_ids[3],
+            "employer_name": "FinTech Lab",
+            "title": "Data Scientist",
+            "profession": "data scientist",
+            "country": "russia",
+            "region": "tatarstan",
+            "city": "kazan",
+            "remote": False,
+            "employment_type": "full-time",
+            "experience_level": "senior",
+            "salary_from": 280000,
+            "salary_to": 380000,
+            "currency": "RUB",
+            "description": "Build scoring models.",
+            "skills": ["python", "ml", "statistics"],
+            "posted_at": "2026-05-13T09:00:00Z",
+        },
+        {
+            "vacancy_id": stable_id("vacancy", "med-data-bi-analyst"),
+            "employer_id": employer_ids[4],
+            "employer_name": "Med Data",
+            "title": "BI Analyst",
+            "profession": "data analyst",
+            "country": "russia",
+            "region": "novosibirsk oblast",
+            "city": "novosibirsk",
+            "remote": True,
+            "employment_type": "part-time",
+            "experience_level": "middle",
+            "salary_from": 120000,
+            "salary_to": 170000,
+            "currency": "RUB",
+            "description": "Create medical dashboards.",
+            "skills": ["sql", "tableau", "statistics"],
+            "posted_at": "2026-05-12T13:10:00Z",
+        },
+        {
+            "vacancy_id": stable_id("vacancy", "med-data-ml-engineer"),
+            "employer_id": employer_ids[4],
+            "employer_name": "Med Data",
+            "title": "ML Engineer",
+            "profession": "machine learning engineer",
+            "country": "russia",
+            "region": "novosibirsk oblast",
+            "city": "novosibirsk",
+            "remote": False,
+            "employment_type": "full-time",
+            "experience_level": "senior",
+            "salary_from": 260000,
+            "salary_to": 350000,
+            "currency": "RUB",
+            "description": "Deploy clinical ML services.",
+            "skills": ["python", "mlops", "docker"],
+            "posted_at": "2026-05-11T08:30:00Z",
+        },
+        {
+            "vacancy_id": stable_id("vacancy", "edu-cloud-frontend-developer"),
+            "employer_id": employer_ids[5],
+            "employer_name": "Edu Cloud",
+            "title": "Frontend Developer",
+            "profession": "frontend developer",
+            "country": "belarus",
+            "region": "minsk",
+            "city": "minsk",
+            "remote": True,
+            "employment_type": "contract",
+            "experience_level": "middle",
+            "salary_from": 7000,
+            "salary_to": 10000,
+            "currency": "BYN",
+            "description": "Build learning interfaces.",
+            "skills": ["javascript", "react", "css"],
+            "posted_at": "2026-05-10T15:10:00Z",
+        },
+        {
+            "vacancy_id": stable_id("vacancy", "edu-cloud-product-analyst"),
+            "employer_id": employer_ids[5],
+            "employer_name": "Edu Cloud",
+            "title": "Product Analyst",
+            "profession": "product analyst",
+            "country": "belarus",
+            "region": "minsk",
+            "city": "minsk",
+            "remote": False,
+            "employment_type": "full-time",
+            "experience_level": "junior",
+            "salary_from": 4500,
+            "salary_to": 6500,
+            "currency": "BYN",
+            "description": "Analyze student behavior.",
+            "skills": ["sql", "python", "analytics"],
+            "posted_at": "2026-05-09T12:25:00Z",
+        },
+        {
+            "vacancy_id": stable_id("vacancy", "retail-pulse-data-engineer"),
+            "employer_id": employer_ids[6],
+            "employer_name": "Retail Pulse",
+            "title": "Data Engineer",
+            "profession": "data engineer",
+            "country": "russia",
+            "region": "sverdlovsk oblast",
+            "city": "ekaterinburg",
+            "remote": True,
+            "employment_type": "full-time",
+            "experience_level": "middle",
+            "salary_from": 210000,
+            "salary_to": 290000,
+            "currency": "RUB",
+            "description": "Process retail event streams.",
+            "skills": ["python", "spark", "kafka"],
+            "posted_at": "2026-05-08T10:40:00Z",
+        },
+        {
+            "vacancy_id": stable_id("vacancy", "retail-pulse-qa-engineer"),
+            "employer_id": employer_ids[6],
+            "employer_name": "Retail Pulse",
+            "title": "QA Automation Engineer",
+            "profession": "qa engineer",
+            "country": "russia",
+            "region": "sverdlovsk oblast",
+            "city": "ekaterinburg",
+            "remote": False,
+            "employment_type": "full-time",
+            "experience_level": "middle",
+            "salary_from": 150000,
+            "salary_to": 210000,
+            "currency": "RUB",
+            "description": "Test analytics platform.",
+            "skills": ["python", "pytest", "selenium"],
+            "posted_at": "2026-05-07T11:00:00Z",
+        },
+        {
+            "vacancy_id": stable_id("vacancy", "gameforge-east-gameplay-programmer"),
+            "employer_id": employer_ids[7],
+            "employer_name": "GameForge East",
+            "title": "Gameplay Programmer",
+            "profession": "game developer",
+            "country": "armenia",
+            "region": "yerevan",
+            "city": "yerevan",
+            "remote": True,
+            "employment_type": "contract",
+            "experience_level": "senior",
+            "salary_from": 1800000,
+            "salary_to": 2600000,
+            "currency": "AMD",
+            "description": "Develop gameplay systems.",
+            "skills": ["c++", "unreal engine", "gameplay"],
+            "posted_at": "2026-05-06T17:30:00Z",
+        },
+        {
+            "vacancy_id": stable_id("vacancy", "gameforge-east-technical-artist"),
+            "employer_id": employer_ids[7],
+            "employer_name": "GameForge East",
+            "title": "Technical Artist",
+            "profession": "technical artist",
+            "country": "armenia",
+            "region": "yerevan",
+            "city": "yerevan",
+            "remote": False,
+            "employment_type": "part-time",
+            "experience_level": "middle",
+            "salary_from": 1100000,
+            "salary_to": 1600000,
+            "currency": "AMD",
+            "description": "Optimize art pipelines.",
+            "skills": ["unity", "shaders", "tools"],
+            "posted_at": "2026-05-05T14:00:00Z",
         },
     ]
 
@@ -125,19 +371,19 @@ def demo_vacancies(employer_ids: list[str]) -> list[dict]:
 def seed_repository(repository) -> dict[str, int]:
     employer_ids: list[str] = []
     for payload in demo_employers():
-        employer = employer_from_payload(payload)
-        saved = repository.upsert_employer(employer)
+        saved = repository.upsert_employer(employer_from_payload(payload))
         employer_ids.append(str(saved.employer_id))
 
-    vacancy_count = 0
-    for payload in demo_vacancies(employer_ids):
-        vacancy = vacancy_from_payload(payload)
-        repository.upsert_vacancy(vacancy)
-        vacancy_count += 1
+    regions: set[tuple[str, str]] = set()
+    vacancies = demo_vacancies(employer_ids)
+    for payload in vacancies:
+        repository.upsert_vacancy(vacancy_from_payload(payload))
+        regions.add((payload["country"], payload["region"]))
 
-    region_stats_count = len(repository.list_region_stats())
     return {
         "employers": len(employer_ids),
-        "vacancies": vacancy_count,
-        "region_stats": region_stats_count,
+        "vacancies": len(vacancies),
+        "region_stats": len(regions),
+        "sample_employer_id": employer_ids[0],
+        "sample_vacancy_id": vacancies[0]["vacancy_id"],
     }

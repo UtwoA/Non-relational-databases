@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Статистика вакансий Cassandra</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --line: #d9dee8;
+      --text: #152033;
+      --muted: #667085;
+      --accent: #0f766e;
+      --accent-soft: #e7f7f3;
+      --danger: #b42318;
+      --code: #111827;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .wrap {
+      width: min(1280px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 72px;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    main {
+      padding: 22px 0 34px;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 8px 12px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      color: var(--accent);
+      background: #fff;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px 10px;
+      color: var(--text);
+      background: #fff;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 82px;
+      resize: vertical;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+    }
+
+    .query-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .query-grid button {
+      min-height: 62px;
+      background: var(--panel);
+      color: var(--text);
+      border-color: var(--line);
+      text-align: left;
+      font-weight: 700;
+    }
+
+    .query-grid button span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .query-grid button.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: #0f3f3a;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .metric, .panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+    }
+
+    .metric {
+      min-height: 82px;
+      padding: 14px;
+    }
+
+    .metric span {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 22px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .panel {
+      overflow: hidden;
+      margin-top: 16px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 54px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-head h2 {
+      font-size: 17px;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .table-wrap {
+      max-height: 500px;
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 980px;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #f1f4f8;
+      color: #344054;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .empty {
+      padding: 30px 14px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .error {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .explain-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1.1fr 1fr;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      min-width: 0;
+      background: #fff;
+    }
+
+    .box h3 {
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 120px minmax(0, 1fr);
+      gap: 8px;
+      margin: 7px 0;
+      font-size: 13px;
+    }
+
+    .kv span:first-child {
+      color: var(--muted);
+    }
+
+    code, pre {
+      font-family: Consolas, "Courier New", monospace;
+      color: var(--code);
+    }
+
+    pre {
+      margin: 0;
+      padding: 10px;
+      overflow: auto;
+      white-space: pre-wrap;
+      border-radius: 6px;
+      background: #f3f4f6;
+      font-size: 13px;
+    }
+
+    .steps {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .steps li {
+      margin: 7px 0;
+    }
+
+    .crud-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      padding: 0 14px 14px;
+    }
+
+    .crud {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .crud strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent);
+    }
+
+    .crud code {
+      display: block;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+    }
+
+    .mutation-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .mutation-form {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    .mutation-form label.wide,
+    .button-row,
+    .crud-log {
+      grid-column: 1 / -1;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    button.danger {
+      border-color: var(--danger);
+      background: var(--danger);
+    }
+
+    .crud-log {
+      min-height: 42px;
+      padding: 10px;
+      border-radius: 6px;
+      background: #f3f4f6;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 980px) {
+      .toolbar, .query-grid, .summary, .crud-grid, .mutation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .explain-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .wrap {
+        width: min(100% - 20px, 1280px);
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 14px 0;
+      }
+
+      .toolbar, .query-grid, .summary, .crud-grid, .mutation-grid, .mutation-form {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap topbar">
+      <div>
+        <h1>Статистика вакансий, Cassandra</h1>
+        <p class="status">10 запросов по первичным ключам, CRUD-операции, денормализованные таблицы</p>
+      </div>
+      <button class="secondary" id="seedBtn" type="button">Заполнить демо-данными</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="toolbar" aria-label="Параметры запросов">
+      <label>Профессия
+        <input id="profession" value="python developer">
+      </label>
+      <label>Страна
+        <input id="country" value="russia">
+      </label>
+      <label>Регион
+        <input id="region" value="moscow">
+      </label>
+      <label>Город
+        <input id="city" value="moscow">
+      </label>
+      <label>Лимит
+        <input id="limit" type="number" min="1" max="50" value="10">
+      </label>
+      <label>Тип занятости
+        <input id="employmentType" value="full-time">
+      </label>
+      <label>Уровень опыта
+        <input id="experienceLevel" value="senior">
+      </label>
+      <label>Удаленно
+        <select id="remote">
+          <option value="true">да</option>
+          <option value="false">нет</option>
+        </select>
+      </label>
+      <label>ID вакансии
+        <input id="vacancyId" placeholder="Заполнится после демо или создания">
+      </label>
+      <label>ID работодателя
+        <input id="employerId" placeholder="Заполнится после демо или создания">
+      </label>
+    </section>
+
+    <nav class="query-grid" aria-label="Запросы по первичным ключам">
+      <button type="button" data-query="all">Все вакансии<span>vacancies_feed</span></button>
+      <button type="button" data-query="profession">Q1 Профессия<span>vacancies_by_profession</span></button>
+      <button type="button" data-query="region">Q2 Регион<span>vacancies_by_region</span></button>
+      <button type="button" data-query="remote">Q3 Удаленность<span>vacancies_by_remote</span></button>
+      <button type="button" data-query="employment">Q4 Тип занятости<span>vacancies_by_employment_type</span></button>
+      <button type="button" data-query="experience">Q5 Уровень опыта<span>vacancies_by_experience_level</span></button>
+      <button type="button" data-query="city">Q6 Город<span>vacancies_by_city</span></button>
+      <button type="button" data-query="stats">Q7 Статистика региона<span>region_stats_by_key</span></button>
+      <button type="button" data-query="vacancy">Q8 Вакансия по ID<span>vacancies_by_id</span></button>
+      <button type="button" data-query="employer">Q9 Работодатель по ID<span>employers_by_id</span></button>
+      <button type="button" data-query="employerVacancies">Q10 Вакансии работодателя<span>vacancies_by_employer</span></button>
+    </nav>
+
+    <section class="summary" aria-label="Сводка">
+      <div class="metric"><span>Выбранный запрос</span><strong id="metricQuery">-</strong></div>
+      <div class="metric"><span>Строк</span><strong id="metricRows">0</strong></div>
+      <div class="metric"><span>Средняя зарплата от</span><strong id="metricSalaryFrom">-</strong></div>
+      <div class="metric"><span>Удаленных вакансий</span><strong id="metricRemote">-</strong></div>
+      <div class="metric"><span>Покрытие требований</span><strong>10 / 10</strong></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 id="resultTitle">Результаты</h2>
+        <span class="status" id="status">Готово</span>
+      </div>
+      <div class="table-wrap" id="result"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Проверка запроса</h2>
+        <span class="status"></span>
+      </div>
+      <div class="explain-grid">
+        <div class="box">
+          <h3>Запрос</h3>
+          <div class="kv"><span>Операция</span><code id="metaCrud">ЧТЕНИЕ</code></div>
+          <div class="kv"><span>Маршрут</span><code id="metaEndpoint">-</code></div>
+          <div class="kv"><span>Таблица</span><code id="metaTable">-</code></div>
+          <div class="kv"><span>Первичный ключ</span><code id="metaKey">-</code></div>
+          <div class="kv"><span>Вторичный индекс</span><code>не используется</code></div>
+          <div class="kv"><span>ALLOW FILTERING</span><code>не используется</code></div>
+        </div>
+        <div class="box">
+          <h3>CQL-запрос</h3>
+          <pre id="metaCql">-</pre>
+        </div>
+        <div class="box">
+          <h3>Ход выполнения</h3>
+          <ol class="steps" id="metaPipeline"></ol>
+        </div>
+      </div>
+      <div class="crud-grid">
+        <div class="crud"><strong>Создание</strong><code>POST /api/employers</code><code>POST /api/vacancies</code></div>
+        <div class="crud"><strong>Чтение</strong><code>10 запросов по первичным ключам</code></div>
+        <div class="crud"><strong>Обновление</strong><code>PUT /api/employers/{id}</code><code>PUT /api/vacancies/{id}</code></div>
+        <div class="crud"><strong>Удаление</strong><code>DELETE /api/employers/{id}</code><code>DELETE /api/vacancies/{id}</code></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Операции с данными</h2>
+        <span class="status"></span>
+      </div>
+      <div class="mutation-grid">
+        <div class="box">
+          <h3>Работодатель</h3>
+          <div class="mutation-form">
+            <label>Название
+              <input id="crudEmployerName" value="Demo Analytics Studio">
+            </label>
+            <label>Отрасль
+              <input id="crudEmployerIndustry" value="Labor market analytics">
+            </label>
+            <label class="wide">Сайт
+              <input id="crudEmployerWebsite" value="https://demo-analytics.example">
+            </label>
+            <div class="button-row">
+              <button type="button" id="createEmployerBtn">Создать работодателя</button>
+              <button type="button" id="updateEmployerBtn">Обновить работодателя</button>
+              <button class="danger" type="button" id="deleteEmployerBtn">Удалить работодателя</button>
+            </div>
+          </div>
+        </div>
+        <div class="box">
+          <h3>Вакансия</h3>
+          <div class="mutation-form">
+            <label>Название
+              <input id="crudVacancyTitle" value="Labor Market Researcher">
+            </label>
+            <label>Валюта
+              <input id="crudCurrency" value="RUB">
+            </label>
+            <label>Зарплата от
+              <input id="crudSalaryFrom" type="number" value="190000">
+            </label>
+            <label>Зарплата до
+              <input id="crudSalaryTo" type="number" value="260000">
+            </label>
+            <label class="wide">Навыки
+              <input id="crudSkills" value="sql, statistics, python, cassandra">
+            </label>
+            <label class="wide">Описание
+              <textarea id="crudDescription">Analyze labor market data and prepare vacancy statistics.</textarea>
+            </label>
+            <div class="button-row">
+              <button type="button" id="createVacancyBtn">Создать вакансию</button>
+              <button type="button" id="updateVacancyBtn">Обновить вакансию</button>
+              <button class="danger" type="button" id="deleteVacancyBtn">Удалить вакансию</button>
+            </div>
+          </div>
+        </div>
+        <div class="crud-log" id="crudLog"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const buttons = [...document.querySelectorAll("[data-query]")];
+    const state = { active: "profession" };
+    const labels = {
+      profession: "Профессия",
+      country: "Страна",
+      region: "Регион",
+      city: "Город",
+      employmentType: "Тип занятости",
+      experienceLevel: "Уровень опыта",
+      vacancyId: "ID вакансии",
+      employerId: "ID работодателя",
+      crudEmployerName: "Название работодателя",
+      crudEmployerIndustry: "Отрасль",
+      crudVacancyTitle: "Название вакансии",
+      crudCurrency: "Валюта",
+      crudDescription: "Описание"
+    };
+
+    const pipeline = [
+      "Интерфейс отправляет запрос во Flask.",
+      "Flask проверяет параметры запроса.",
+      "Репозиторий выполняет подготовленный CQL-запрос к отдельной таблице чтения.",
+      "Cassandra использует partition key из PRIMARY KEY.",
+      "Строки преобразуются в JSON и выводятся в таблицу."
+    ];
+
+    const queries = {
+      all: {
+        title: "Все последние вакансии",
+        endpoint: () => `/api/vacancies?limit=${limit()}`,
+        table: "vacancies_feed",
+        key: "(feed_name), posted_date, posted_at, vacancy_id",
+        cql: "SELECT * FROM vacancies_feed WHERE feed_name = 'all' LIMIT ?",
+        required: []
+      },
+      profession: {
+        title: "Вакансии по профессии",
+        endpoint: () => `/api/vacancies/by-profession/${encodeURIComponent($("profession").value)}?limit=${limit()}`,
+        table: "vacancies_by_profession",
+        key: "(profession), posted_date, posted_at, vacancy_id",
+        cql: "SELECT * FROM vacancies_by_profession WHERE profession = ? LIMIT ?",
+        required: ["profession"]
+      },
+      region: {
+        title: "Вакансии по региону",
+        endpoint: () => `/api/vacancies/by-region?country=${enc("country")}&region=${enc("region")}&limit=${limit()}`,
+        table: "vacancies_by_region",
+        key: "(country, region), posted_date, posted_at, vacancy_id",
+        cql: "SELECT * FROM vacancies_by_region WHERE country = ? AND region = ? LIMIT ?",
+        required: ["country", "region"]
+      },
+      remote: {
+        title: "Вакансии по удаленности",
+        endpoint: () => `/api/vacancies/remote?remote=${$("remote").value}&limit=${limit()}`,
+        table: "vacancies_by_remote",
+        key: "(remote), posted_date, posted_at, vacancy_id",
+        cql: "SELECT * FROM vacancies_by_remote WHERE remote = ? LIMIT ?",
+        required: []
+      },
+      employment: {
+        title: "Вакансии по типу занятости",
+        endpoint: () => `/api/vacancies/by-employment-type/${encodeURIComponent($("employmentType").value)}?limit=${limit()}`,
+        table: "vacancies_by_employment_type",
+        key: "(employment_type), posted_date, posted_at, vacancy_id",
+        cql: "SELECT * FROM vacancies_by_employment_type WHERE employment_type = ? LIMIT ?",
+        required: ["employmentType"]
+      },
+      experience: {
+        title: "Вакансии по уровню опыта",
+        endpoint: () => `/api/vacancies/by-experience-level/${encodeURIComponent($("experienceLevel").value)}?limit=${limit()}`,
+        table: "vacancies_by_experience_level",
+        key: "(experience_level), posted_date, posted_at, vacancy_id",
+        cql: "SELECT * FROM vacancies_by_experience_level WHERE experience_level = ? LIMIT ?",
+        required: ["experienceLevel"]
+      },
+      city: {
+        title: "Вакансии по городу",
+        endpoint: () => `/api/vacancies/by-city?country=${enc("country")}&city=${enc("city")}&limit=${limit()}`,
+        table: "vacancies_by_city",
+        key: "(country, city), posted_date, posted_at, vacancy_id",
+        cql: "SELECT * FROM vacancies_by_city WHERE country = ? AND city = ? LIMIT ?",
+        required: ["country", "city"]
+      },
+      stats: {
+        title: "Статистика региона",
+        endpoint: () => `/api/stats/regions?country=${enc("country")}&region=${enc("region")}`,
+        table: "region_stats_by_key",
+        key: "(country, region), posted_date",
+        cql: "SELECT * FROM region_stats_by_key WHERE country = ? AND region = ? LIMIT 1",
+        required: ["country", "region"]
+      },
+      vacancy: {
+        title: "Вакансия по ID",
+        endpoint: () => `/api/vacancies/${encodeURIComponent($("vacancyId").value)}`,
+        table: "vacancies_by_id",
+        key: "(vacancy_id)",
+        cql: "SELECT * FROM vacancies_by_id WHERE vacancy_id = ?",
+        required: ["vacancyId"]
+      },
+      employer: {
+        title: "Работодатель по ID",
+        endpoint: () => `/api/employers/${encodeURIComponent($("employerId").value)}`,
+        table: "employers_by_id",
+        key: "(employer_id)",
+        cql: "SELECT * FROM employers_by_id WHERE employer_id = ?",
+        required: ["employerId"]
+      },
+      employerVacancies: {
+        title: "Вакансии работодателя",
+        endpoint: () => `/api/vacancies/by-employer/${encodeURIComponent($("employerId").value)}?limit=${limit()}`,
+        table: "vacancies_by_employer",
+        key: "(employer_id), posted_date, posted_at, vacancy_id",
+        cql: "SELECT * FROM vacancies_by_employer WHERE employer_id = ? LIMIT ?",
+        required: ["employerId"]
+      }
+    };
+
+    function enc(id) {
+      return encodeURIComponent($(id).value);
+    }
+
+    function limit() {
+      return Math.min(Math.max(Number($("limit").value || 10), 1), 50);
+    }
+
+    function validate(meta) {
+      for (const id of meta.required) {
+        if (!$(id).value.trim()) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    async function readJson(response) {
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        return response.json();
+      }
+      const text = await response.text();
+      throw new Error(`Ожидался JSON, получен HTTP ${response.status}: ${text.slice(0, 120)}`);
+    }
+
+    async function requestJson(url, options = {}) {
+      const response = await fetch(url, options);
+      const data = await readJson(response);
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+      return data;
+    }
+
+    function requireValue(id) {
+      const value = $(id).value.trim();
+      if (!value) throw new Error(`Заполните поле "${labels[id] || id}".`);
+      return value;
+    }
+
+    function employerPayload() {
+      return {
+        name: requireValue("crudEmployerName"),
+        industry: requireValue("crudEmployerIndustry"),
+        website: $("crudEmployerWebsite").value.trim() || null,
+        country: requireValue("country"),
+        city: requireValue("city"),
+        active: true
+      };
+    }
+
+    function vacancyPayload() {
+      return {
+        employer_id: requireValue("employerId"),
+        employer_name: requireValue("crudEmployerName"),
+        title: requireValue("crudVacancyTitle"),
+        profession: requireValue("profession"),
+        country: requireValue("country"),
+        region: requireValue("region"),
+        city: requireValue("city"),
+        remote: $("remote").value === "true",
+        employment_type: requireValue("employmentType"),
+        experience_level: requireValue("experienceLevel"),
+        salary_from: Number($("crudSalaryFrom").value || 0),
+        salary_to: Number($("crudSalaryTo").value || 0),
+        currency: requireValue("crudCurrency"),
+        description: requireValue("crudDescription"),
+        skills: $("crudSkills").value.split(",").map((item) => item.trim()).filter(Boolean)
+      };
+    }
+
+    function mutationOptions(method, body) {
+      return {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      };
+    }
+
+    async function runMutation(label, action, nextQuery = state.active) {
+      $("crudLog").textContent = `${label}: выполняется`;
+      $("status").textContent = label;
+      try {
+        const data = await action();
+        if (data.employer_id) $("employerId").value = data.employer_id;
+        if (data.vacancy_id) $("vacancyId").value = data.vacancy_id;
+        $("crudLog").textContent = `${label}: выполнено ${JSON.stringify(data)}`;
+        await load(nextQuery);
+      } catch (error) {
+        $("crudLog").textContent = `${label}: ${error.message}`;
+        $("status").textContent = "Error";
+      }
+    }
+
+    async function load(queryName = state.active) {
+      if (!validate(queries[queryName])) {
+        queryName = "all";
+      }
+      state.active = queryName;
+      const meta = queries[queryName];
+      buttons.forEach((button) => button.classList.toggle("active", button.dataset.query === queryName));
+      renderMeta(meta);
+      $("status").textContent = "Загрузка";
+      $("resultTitle").textContent = meta.title;
+      $("metricQuery").textContent = meta.title;
+      try {
+        const response = await fetch(meta.endpoint());
+        const data = await readJson(response);
+        if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+        const rows = Array.isArray(data) ? data : [data];
+        renderRows(rows);
+        renderMetrics(rows);
+        $("status").textContent = "Готово";
+      } catch (error) {
+        $("result").innerHTML = `<div class="empty error">${escapeHtml(error.message)}</div>`;
+        renderMetrics([]);
+        $("status").textContent = "Ошибка";
+      }
+    }
+
+    function renderMeta(meta) {
+      $("metaCrud").textContent = "ЧТЕНИЕ";
+      $("metaEndpoint").textContent = safeEndpoint(meta);
+      $("metaTable").textContent = meta.table;
+      $("metaKey").textContent = meta.key;
+      $("metaCql").textContent = meta.cql;
+      $("metaPipeline").innerHTML = pipeline.map((step) => `<li>${escapeHtml(step)}</li>`).join("");
+    }
+
+    function safeEndpoint(meta) {
+      try {
+        return meta.endpoint();
+      } catch {
+        return "-";
+      }
+    }
+
+    function renderRows(rows) {
+      if (!rows.length) {
+        $("result").innerHTML = '<div class="empty">Нет данных</div>';
+        return;
+      }
+      const columns = preferredColumns(rows);
+      const head = columns.map((column) => `<th>${escapeHtml(columnLabel(column))}</th>`).join("");
+      const body = rows.map((row) => {
+        return `<tr>${columns.map((column) => `<td>${escapeHtml(format(row[column]))}</td>`).join("")}</tr>`;
+      }).join("");
+      $("result").innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    function preferredColumns(rows) {
+      const preferred = [
+        "title", "name", "employer_name", "profession", "industry", "country", "region", "city", "remote",
+        "employment_type", "experience_level", "salary_from", "salary_to", "currency",
+        "vacancy_count", "average_salary_from", "average_salary_to", "remote_count",
+        "active_count", "posted_at", "posted_date", "vacancy_id", "employer_id", "skills"
+      ];
+      const keys = [...new Set(rows.flatMap((row) => Object.keys(row)))];
+      return [...preferred.filter((key) => keys.includes(key)), ...keys.filter((key) => !preferred.includes(key))];
+    }
+
+    function columnLabel(column) {
+      const labels = {
+        title: "Название",
+        name: "Название",
+        employer_name: "Работодатель",
+        profession: "Профессия",
+        industry: "Отрасль",
+        country: "Страна",
+        region: "Регион",
+        city: "Город",
+        remote: "Удаленно",
+        employment_type: "Тип занятости",
+        experience_level: "Уровень опыта",
+        salary_from: "Зарплата от",
+        salary_to: "Зарплата до",
+        currency: "Валюта",
+        vacancy_count: "Количество вакансий",
+        average_salary_from: "Средняя зарплата от",
+        average_salary_to: "Средняя зарплата до",
+        remote_count: "Удаленных",
+        active_count: "Активных",
+        posted_at: "Дата публикации",
+        posted_date: "День публикации",
+        vacancy_id: "ID вакансии",
+        employer_id: "ID работодателя",
+        skills: "Навыки",
+        active: "Активна",
+        description: "Описание",
+        updated_at: "Обновлено",
+        website: "Сайт",
+        created_at: "Создано",
+        feed_name: "Лента"
+      };
+      return labels[column] || column;
+    }
+
+    function renderMetrics(rows) {
+      $("metricRows").textContent = rows.length;
+      const stats = rows[0] && rows[0].vacancy_count !== undefined ? rows[0] : null;
+      const salaryFrom = stats ? stats.average_salary_from : average(rows.map((row) => row.salary_from));
+      const remoteCount = stats ? stats.remote_count : rows.filter((row) => row.remote === true).length;
+      $("metricSalaryFrom").textContent = salaryFrom === null ? "-" : Math.round(salaryFrom).toLocaleString("ru-RU");
+      $("metricRemote").textContent = remoteCount === undefined ? "-" : remoteCount;
+    }
+
+    function average(values) {
+      const nums = values.filter((value) => Number.isFinite(Number(value))).map(Number);
+      if (!nums.length) return null;
+      return nums.reduce((sum, value) => sum + value, 0) / nums.length;
+    }
+
+    function format(value) {
+      if (Array.isArray(value)) return value.join(", ");
+      if (value === true) return "да";
+      if (value === false) return "нет";
+      if (value === null || value === undefined) return "";
+      return value;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function queryForInput(id) {
+      const keepCurrent = {
+        country: ["region", "city", "stats"],
+        region: ["region", "stats"],
+        city: ["city"],
+        employerId: ["employer", "employerVacancies"]
+      };
+      if (id === "vacancyId") return "vacancy";
+      if (id === "profession") return "profession";
+      if (id === "remote") return "remote";
+      if (id === "employmentType") return "employment";
+      if (id === "experienceLevel") return "experience";
+      if (keepCurrent[id] && keepCurrent[id].includes(state.active)) return state.active;
+      if (id === "country" || id === "region") return "region";
+      if (id === "city") return "city";
+      if (id === "employerId") return "employer";
+      return state.active;
+    }
+
+    buttons.forEach((button) => button.addEventListener("click", () => load(button.dataset.query)));
+    document.querySelectorAll("input, select").forEach((item) => {
+      item.addEventListener("change", () => load(queryForInput(item.id)));
+      item.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          load(queryForInput(item.id));
+        }
+      });
+    });
+    $("seedBtn").addEventListener("click", async () => {
+      $("status").textContent = "Заполнение";
+      const data = await requestJson("/api/admin/seed", { method: "POST" });
+      if (data.sample_vacancy_id) $("vacancyId").value = data.sample_vacancy_id;
+      if (data.sample_employer_id) $("employerId").value = data.sample_employer_id;
+      await load();
+    });
+
+    $("createEmployerBtn").addEventListener("click", () => runMutation(
+      "Создание работодателя",
+      () => requestJson("/api/employers", mutationOptions("POST", employerPayload())),
+      "employer"
+    ));
+
+    $("updateEmployerBtn").addEventListener("click", () => runMutation(
+      "Обновление работодателя",
+      () => requestJson(`/api/employers/${encodeURIComponent(requireValue("employerId"))}`, mutationOptions("PUT", employerPayload())),
+      "employer"
+    ));
+
+    $("deleteEmployerBtn").addEventListener("click", () => runMutation(
+      "Удаление работодателя",
+      async () => {
+        const data = await requestJson(`/api/employers/${encodeURIComponent(requireValue("employerId"))}`, { method: "DELETE" });
+        $("employerId").value = "";
+        return data;
+      },
+      "profession"
+    ));
+
+    $("createVacancyBtn").addEventListener("click", () => runMutation(
+      "Создание вакансии",
+      () => requestJson("/api/vacancies", mutationOptions("POST", vacancyPayload())),
+      "vacancy"
+    ));
+
+    $("updateVacancyBtn").addEventListener("click", () => runMutation(
+      "Обновление вакансии",
+      () => requestJson(`/api/vacancies/${encodeURIComponent(requireValue("vacancyId"))}`, mutationOptions("PUT", vacancyPayload())),
+      "vacancy"
+    ));
+
+    $("deleteVacancyBtn").addEventListener("click", () => runMutation(
+      "Удаление вакансии",
+      async () => {
+        const data = await requestJson(`/api/vacancies/${encodeURIComponent(requireValue("vacancyId"))}`, { method: "DELETE" });
+        $("vacancyId").value = "";
+        return data;
+      },
+      "profession"
+    ));
+
+    load();
+  </script>
+</body>
+</html>
