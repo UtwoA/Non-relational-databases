@@ -1,0 +1,2 @@
+"""MongoDB auth service demo."""
+

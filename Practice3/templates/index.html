@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Practice 3 Redis Demo</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: rgba(15, 23, 42, 0.88);
+      --card: #111827;
+      --accent: #38bdf8;
+      --accent-2: #22c55e;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --border: rgba(148, 163, 184, 0.18);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 28%),
+        radial-gradient(circle at right top, rgba(34, 197, 94, 0.18), transparent 24%),
+        linear-gradient(135deg, #020617 0%, #0f172a 45%, #111827 100%);
+      min-height: 100vh;
+    }
+    .wrap {
+      width: min(1100px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-end;
+      margin-bottom: 24px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1;
+    }
+    .subtitle {
+      color: var(--muted);
+      margin: 10px 0 0;
+      max-width: 680px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 20px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(12px);
+    }
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 1.1rem;
+    }
+    form {
+      display: grid;
+      gap: 12px;
+    }
+    label {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    input {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #0b1120;
+      color: var(--text);
+      padding: 14px 16px;
+      font-size: 1rem;
+      outline: none;
+    }
+    input:focus {
+      border-color: rgba(56, 189, 248, 0.8);
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 13px 18px;
+      font-size: 0.98rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    .primary { background: var(--accent); color: #082f49; font-weight: 700; }
+    .danger { background: rgba(239, 68, 68, 0.18); color: #fecaca; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .message {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      color: #dbeafe;
+    }
+    .stats {
+      display: grid;
+      gap: 12px;
+    }
+    .stat {
+      padding: 14px 16px;
+      background: rgba(2, 6, 23, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+    .stat strong {
+      font-size: 1.05rem;
+    }
+    .list {
+      margin-top: 20px;
+      display: grid;
+      gap: 12px;
+    }
+    .user {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(17, 24, 39, 0.95);
+      border: 1px solid var(--border);
+    }
+    .user .name {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .user .meta {
+      color: var(--muted);
+      font-size: 0.92rem;
+      word-break: break-all;
+    }
+    .hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    @media (max-width: 880px) {
+      header, .grid { grid-template-columns: 1fr; display: grid; }
+      .wrap { width: min(100% - 20px, 1100px); }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div>
+        <h1>Redis User Admin</h1>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>Add user</h2>
+        <form method="post" action="/users">
+          <label>
+            Name
+            <input name="name" placeholder="Например, Alice" autocomplete="off" required>
+          </label>
+          <div class="actions">
+            <button class="primary" type="submit">Add</button>
+          </div>
+        </form>
+
+        <form method="post" action="/reset" style="margin-top: 12px;">
+          <div class="actions">
+            <button class="danger" type="submit">Clear all users</button>
+          </div>
+        </form>
+
+        {% if message %}
+          <div class="message">{{ message }}</div>
+        {% endif %}
+
+        <div class="list">
+          <h2 style="margin-top: 4px;">Users in Redis</h2>
+          {% if users %}
+            {% for user in users %}
+              <div class="user">
+                <div class="name">{{ user.name }}</div>
+                <div class="meta">id: {{ user.id }}</div>
+                <div class="meta">created_at: {{ user.created_at }}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="user">Список пуст. Добавьте первого пользователя.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <aside class="panel">
+        <h2>Cached summary</h2>
+        <div class="stats">
+          <div class="stat">
+            <span>Total users</span>
+            <strong>{{ report.total_users }}</strong>
+          </div>
+          <div class="stat">
+            <span>First user</span>
+            <strong>{{ report.first_user or '—' }}</strong>
+          </div>
+          <div class="stat">
+            <span>Last user</span>
+            <strong>{{ report.last_user or '—' }}</strong>
+          </div>
+          <div class="stat">
+            <span>Initials</span>
+            <strong>{{ report.initials or {} }}</strong>
+          </div>
+          <div class="stat">
+            <span>Report build time</span>
+            <strong>{{ '%.4f'|format(elapsed) }} s</strong>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>
